@@ -166,13 +166,16 @@
       border-radius: var(--radius);
     }
 
-    .search button:disabled {
-      opacity: .55;
-      cursor: default;
+    .examples-inline {
+      margin-top: 16px;
+      font-size: 12px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--soft);
     }
 
     .choice-row {
-      margin-top: 14px;
+      margin-top: 18px;
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
@@ -360,6 +363,7 @@
 
     .score-brief {
       margin-top: 18px;
+      overflow: hidden;
       font-size: 14px;
       line-height: 1.45;
       color: var(--muted);
@@ -548,6 +552,7 @@
 
     .verdict-item {
       padding: 14px 16px;
+      overflow: hidden;
       border: 1px solid var(--border);
       background: rgba(255,255,255,0.04);
       color: var(--muted);
@@ -841,7 +846,8 @@
             <button class="choice" type="button" data-mode="listing">Annonce</button>
           </div>
 
-            <div style="height:40px;"></div>
+
+          <div style="height:40px;"></div>
         </div>
       </div>
     </section>
@@ -887,6 +893,12 @@
     const form = document.getElementById("place-form");
     const choices = document.querySelectorAll(".choice");
     let mode = "auto";
+
+    document.querySelectorAll(".quick-example").forEach(btn => {
+      btn.addEventListener("click", () => {
+        input.value = btn.dataset.example;
+      });
+    });
 
     choices.forEach(choice => {
       choice.addEventListener("click", () => {
@@ -978,7 +990,19 @@
       `;
     }
 
+    function setDemoScore(score) {
+      const visual = getScoreVisual(score);
+      const card = document.getElementById("demo-score-card");
+      const pill = document.getElementById("demo-score-pill");
+      const face = document.getElementById("demo-score-face");
 
+      card.className = "score-card " + visual.tone;
+      pill.className = "score-pill " + visual.tone;
+      pill.textContent = visual.label;
+      document.getElementById("demo-score-status").textContent = visual.label;
+      document.getElementById("demo-score-number").textContent = score;
+      face.innerHTML = renderFace(visual.face, visual.color);
+    }
     const home = document.getElementById("view-home");
     const resultView = document.getElementById("view-result");
     const aboutView = document.getElementById("view-about");
@@ -1014,6 +1038,29 @@
       resultView.classList.toggle("hidden", which !== "result");
       aboutView.classList.toggle("hidden", which !== "about");
       setActiveNav(which === "result" ? "search" : which);
+    }
+
+
+    function clampScore(value) {
+      let n = Number(value ?? 50);
+      if (!Number.isFinite(n)) n = 50;
+      if (n > 0 && n <= 10) n = n * 10;
+      return Math.max(0, Math.min(100, Math.round(n)));
+    }
+
+    function cleanText(value) {
+      return String(value ?? "")
+        .replace(/\[\s*([^\]]+)\s*\]\([^)]+\)/g, "$1")
+        .replace(/https?:\/\/\S+/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+
+    function limitText(value, max = 170) {
+      const text = cleanText(value);
+      if (text.length <= max) return text;
+      return text.slice(0, max).replace(/\s+\S*$/, "") + "…";
     }
 
     function escapeHtml(value) {
@@ -1289,149 +1336,7 @@
       `;
     }
 
-
-    async function analyzePlace(value) {
-      const response = await fetch("/api/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: value, mode })
-      });
-
-      const text = await response.text();
-      let payload;
-
-      try {
-        payload = JSON.parse(text);
-      } catch {
-        throw new Error("Réponse API invalide");
-      }
-
-      if (!response.ok) {
-        throw new Error(payload.error || "Erreur pendant l’analyse");
-      }
-
-      return payload;
-    }
-
-    function renderApiResult(query, payload) {
-      const score = Number(payload.score ?? 50);
-      const visual = getScoreVisual(score);
-      const safeQuery = escapeHtml(query);
-
-      const categories = payload.categories || {};
-      const signals = payload.signals || {};
-      const questions = Array.isArray(payload.questions) ? payload.questions : [];
-
-      resultView.innerHTML = `
-        <div class="record-wrap">
-          <div class="crumbs"><span>Accueil</span><span>/</span><span>Analyse</span><span>/</span><span>${safeQuery}</span></div>
-
-          <section class="record-hero">
-            <div>
-              <div class="eyebrow">Analyse immobilière</div>
-              <h1>${score}/100</h1>
-              <div class="input-type">${escapeHtml(payload.inputType || "Analyse")} · ${escapeHtml(payload.confidence || "Indicative")}</div>
-              <div class="hero-sub">${escapeHtml(payload.verdict || visual.label)}</div>
-              <div class="record-subline">${escapeHtml(payload.subtitle || "")}</div>
-
-              <div class="verdict-line">
-                <div class="verdict-item">
-                  <strong>Lecture rapide</strong>
-                  ${escapeHtml(payload.fastRead || "")}
-                </div>
-                <div class="verdict-item">
-                  <strong>À vérifier</strong>
-                  ${escapeHtml(payload.checkRead || "")}
-                </div>
-              </div>
-            </div>
-
-            <aside class="score-card ${visual.tone}">
-              <div>
-                <div class="score-label">PlaceCheck Index</div>
-                <div class="score-pill ${visual.tone}">${escapeHtml(payload.verdict || visual.label)}</div>
-
-                <div class="score-visual">
-                  <div class="score-face">${renderFace(visual.face, visual.color)}</div>
-                  <div class="score-meta">
-                    <div class="score-status">${escapeHtml(payload.verdict || visual.label)}</div>
-                    <div class="score-number">${score}<span class="score-denom">/100</span></div>
-                  </div>
-                </div>
-
-                <div class="score-brief">${escapeHtml(payload.summary || "")}</div>
-              </div>
-            </aside>
-          </section>
-
-          <main class="record-main">
-            <section>
-              <h2>Catégories</h2>
-              <div class="category-grid">
-                ${renderCategory("life", "Qualité de vie", (categories.life ?? 50) + "/100", categories.lifeText || "")}
-                ${renderCategory("price", "Prix & valeur", (categories.price ?? 50) + "/100", categories.priceText || "")}
-                ${renderCategory("safety", "Sécurité & nuisances", (categories.safety ?? 50) + "/100", categories.safetyText || "")}
-                ${renderCategory("access", "Accessibilité", (categories.access ?? 50) + "/100", categories.accessText || "")}
-                ${renderCategory("energy", "Énergie / logement", (categories.energy ?? 50) + "/100", categories.energyText || "")}
-              </div>
-            </section>
-
-            <section>
-              <h2>Signaux</h2>
-              <div class="signal-columns">
-                <div class="signal-box">
-                  <h3>Signaux positifs</h3>
-                  <ul class="mini-list">
-                    ${(signals.positive || []).map(item => `<li>${escapeHtml(item)}</li>`).join("")}
-                  </ul>
-                </div>
-                <div class="signal-box">
-                  <h3>Points à vérifier</h3>
-                  <ul class="mini-list">
-                    ${(signals.negative || []).map(item => `<li>${escapeHtml(item)}</li>`).join("")}
-                  </ul>
-                </div>
-              </div>
-            </section>
-
-            <section>
-              <h2>Ce que PlaceCheck retient</h2>
-              <div class="summary-card">${escapeHtml(payload.placecheckTake || "")}</div>
-            </section>
-
-            <section>
-              <h2>Questions avant décision</h2>
-              <div class="summary-card">
-                <div class="question-grid">
-                  ${questions.map((q, i) => `
-                    <div class="question-row">
-                      <div class="question-number">${String(i + 1).padStart(2, "0")}</div>
-                      <div>${escapeHtml(q)}</div>
-                    </div>
-                  `).join("")}
-                </div>
-              </div>
-            </section>
-
-            <section>
-              <h2>Sources</h2>
-              <div class="source-list">
-                ${(payload.sources || []).map(source => `
-                  <div class="source-row">
-                    <div class="source-domain">${escapeHtml(source.domain || "Source")}</div>
-                    <div class="source-title">${source.url ? `<a href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(source.title || source.url)}</a>` : escapeHtml(source.title || "")}</div>
-                  </div>
-                `).join("")}
-              </div>
-            </section>
-          </main>
-        </div>
-      `;
-
-      showOnly("result");
-    }
-
-    form.addEventListener("submit", async function(e) {
+    form.addEventListener("submit", function(e) {
       e.preventDefault();
       const value = input.value.trim();
       if (!value) return;
@@ -1441,30 +1346,25 @@
       button.textContent = "Analyse";
       startLoadingMessages();
 
-      try {
-        const payload = await analyzePlace(value);
-        window.location.hash = "#/result";
-        renderApiResult(value, payload);
-      } catch (err) {
-        alert(err.message || "Impossible d’analyser cette adresse.");
-      } finally {
+      setTimeout(() => {
         stopLoadingMessages();
         loader.classList.add("hidden");
         button.disabled = false;
         button.textContent = "Analyser";
-      }
+        window.location.hash = "#/result";
+        renderResult(value);
+      }, 800);
     });
     function route() {
       const hash = window.location.hash || "#/";
       if (hash === "#/about") {
         showOnly("about");
       } else if (hash === "#/result") {
-        showOnly("result");
+        renderResult(input.value.trim() || "Adresse test");
       } else {
         showOnly("home");
       }
     }
-
 
     const logoHome = document.getElementById("go-home");
     if (logoHome) {
