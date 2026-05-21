@@ -841,76 +841,7 @@
             <button class="choice" type="button" data-mode="listing">Annonce</button>
           </div>
 
-
-
-          <div class="score-demo">
-            <aside class="score-card green-soft" id="demo-score-card">
-              <div>
-                <div class="score-label">PlaceCheck Index</div>
-                <div class="score-pill green-soft" id="demo-score-pill">Bonne adresse</div>
-
-                <div class="score-visual">
-                  <div class="score-face" id="demo-score-face"></div>
-                  <div class="score-meta">
-                    <div class="score-status" id="demo-score-status">Bonne adresse</div>
-                    <div class="score-number"><span id="demo-score-number">74</span><span class="score-denom">/100</span></div>
-                  </div>
-                </div>
-
-                <div class="score-brief">Lecture rapide d’une adresse ou d’une annonce : qualité de vie, prix, nuisances, accessibilité et énergie.</div>
-              </div>
-            </aside>
-
-            <div class="signal-list">
-              <div class="signal-item">
-                <div class="signal-picto" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none">
-                    <path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z" stroke-width="1.5" stroke-linejoin="round"/>
-                  </svg>
-                </div>
-                <div><strong>Qualité de vie</strong><br>Commerces, calme, ambiance, espaces verts, vie de quartier.</div>
-              </div>
-              <div class="signal-item">
-                <div class="signal-picto" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="8" stroke-width="1.5"/>
-                    <path d="M14.5 8.8c-.6-.5-1.4-.8-2.4-.8-2 0-3.6 1.7-3.6 4s1.6 4 3.6 4c1 0 1.8-.3 2.4-.8" stroke-width="1.5" stroke-linecap="round"/>
-                    <path d="M7 11h6M7 13h6" stroke-width="1.5" stroke-linecap="round"/>
-                  </svg>
-                </div>
-                <div><strong>Prix & valeur</strong><br>Cohérence du prix, loyer moyen, tension locative, potentiel de revente.</div>
-              </div>
-              <div class="signal-item">
-                <div class="signal-picto" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none">
-                    <path d="M12 3l7 3v5c0 4.6-2.8 7.8-7 10-4.2-2.2-7-5.4-7-10V6l7-3z" stroke-width="1.5" stroke-linejoin="round"/>
-                    <path d="M9 12l2 2 4-5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </div>
-                <div><strong>Sécurité & nuisances</strong><br>Bruit, sécurité, pollution, risques et signaux faibles.</div>
-              </div>
-              <div class="signal-item">
-                <div class="signal-picto" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none">
-                    <rect x="6" y="4" width="12" height="13" rx="2" stroke-width="1.5"/>
-                    <path d="M9 7h6M8.5 11h7" stroke-width="1.5" stroke-linecap="round"/>
-                    <circle cx="9" cy="14" r=".8" fill="currentColor"/>
-                    <circle cx="15" cy="14" r=".8" fill="currentColor"/>
-                    <path d="M9 20l2-3M15 20l-2-3" stroke-width="1.5" stroke-linecap="round"/>
-                  </svg>
-                </div>
-                <div><strong>Accessibilité</strong><br>Transports, vélo, écoles, services et temps de trajet.</div>
-              </div>
-              <div class="signal-item">
-                <div class="signal-picto" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none">
-                    <path d="M13 2L5 13h6l-1 9 9-13h-6l1-7z" stroke-width="1.5" stroke-linejoin="round"/>
-                  </svg>
-                </div>
-                <div><strong>Énergie / logement</strong><br>DPE, confort thermique, charges et qualité du logement.</div>
-              </div>
-            </div>
-          </div>
+            <div style="height:40px;"></div>
         </div>
       </div>
     </section>
@@ -1046,22 +977,6 @@
         </svg>
       `;
     }
-
-    function setDemoScore(score) {
-      const visual = getScoreVisual(score);
-      const card = document.getElementById("demo-score-card");
-      const pill = document.getElementById("demo-score-pill");
-      const face = document.getElementById("demo-score-face");
-
-      card.className = "score-card " + visual.tone;
-      pill.className = "score-pill " + visual.tone;
-      pill.textContent = visual.label;
-      document.getElementById("demo-score-status").textContent = visual.label;
-      document.getElementById("demo-score-number").textContent = score;
-      face.innerHTML = renderFace(visual.face, visual.color);
-    }
-
-    setDemoScore(74);
 
 
     const home = document.getElementById("view-home");
