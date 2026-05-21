@@ -724,6 +724,16 @@
       border-top: 1px solid var(--border);
     }
 
+    .error-box {
+      margin-top: 14px;
+      color: var(--red);
+      padding: 14px 16px;
+      font-size: 13px;
+      line-height: 1.45;
+      border: 1px solid rgba(212,117,117,0.35);
+      background: var(--panel);
+    }
+
     .loading {
       margin-top: 14px;
       font-size: 13px;
@@ -839,6 +849,8 @@
           <div id="loading-indicator" class="loading hidden">
             <span id="loading-text">Analyse</span><span class="dots"></span>
           </div>
+
+          <div class="error-box hidden" id="error-box"></div>
 
           <div class="choice-row">
             <button class="choice active" type="button" data-mode="auto">Auto</button>
@@ -1009,6 +1021,7 @@
     const loader = document.getElementById("loading-indicator");
     const loaderText = document.getElementById("loading-text");
     const button = document.getElementById("search-button");
+    const errorBox = document.getElementById("error-box");
 
     const loadingMessages = ["Analyse", "Lecture des signaux", "Calcul du score"];
     let loadingInterval = null;
@@ -1083,244 +1096,6 @@
 
       return icons[type] || icons.life;
     }
-
-
-    function analyzeInput(query) {
-      const q = query.toLowerCase();
-
-      let result = {
-        inputType: "Adresse",
-        confidence: "Analyse indicative",
-        score: 74,
-        verdict: "Bonne adresse",
-        subtitle: "Adresse équilibrée avec une bonne qualité de vie globale. Le prix semble cohérent, avec quelques réserves sur les nuisances et la performance énergétique.",
-        summary: "Bon équilibre entre cadre de vie, accessibilité et valeur. Quelques points à vérifier avant décision.",
-        fastRead: "Bon potentiel d’usage, surtout si le logement est en bon état.",
-        checkRead: "Bruit réel, charges, DPE, état de l’immeuble et prix final négocié.",
-        categories: {
-          life: 82,
-          price: 67,
-          safety: 61,
-          access: 86,
-          energy: 58
-        }
-      };
-
-      if (q.includes("paris")) {
-        result.score = 68;
-        result.verdict = "Adresse attractive";
-        result.subtitle = "Secteur dynamique et recherché, mais pression sur les prix et nuisances possibles selon l’emplacement exact.";
-      }
-
-      if (q.includes("bordeaux")) {
-        result.score = 79;
-        result.verdict = "Bon potentiel";
-        result.subtitle = "Bon équilibre entre qualité de vie, accessibilité et attractivité résidentielle.";
-      }
-
-      if (q.includes("seloger") || q.includes("leboncoin") || q.includes("bienici") || q.includes("http")) {
-        result.inputType = "Annonce";
-        result.confidence = "Lecture annonce";
-        result.score = 63;
-        result.verdict = "Annonce à vérifier";
-        result.subtitle = "L’annonce semble correcte mais plusieurs éléments doivent être confirmés avant décision.";
-        result.summary = "L’adresse paraît intéressante, mais la qualité de l’annonce doit être vérifiée : prix, DPE, charges, état réel et cohérence des photos.";
-        result.fastRead = "Annonce plausible, mais pas assez d’éléments pour conclure sans visite.";
-        result.checkRead = "Surface exacte, charges, DPE, étage, exposition, bruit et état des parties communes.";
-      }
-
-      if (q.includes("dpe g")) {
-        result.categories.energy = 22;
-        result.score -= 14;
-        result.verdict = "Point énergétique fort";
-        result.subtitle = "Le DPE G devient le principal point d’alerte. Le lieu peut rester intéressant, mais le logement doit être regardé avec prudence.";
-        result.checkRead = "Montant des travaux, interdictions de location, charges, isolation et marge de négociation.";
-      }
-
-      if (q.includes("travaux")) {
-        result.score -= 6;
-      }
-
-      if (q.includes("calme")) {
-        result.categories.life += 4;
-      }
-
-      result.score = Math.max(12, Math.min(96, result.score));
-
-      return result;
-    }
-
-    function renderResult(query) {
-      const analysis = analyzeInput(query);
-      const score = analysis.score;
-      const visual = getScoreVisual(score);
-
-      const safeQuery = escapeHtml(query);
-
-      resultView.innerHTML = `
-        <div class="record-wrap">
-          <div class="crumbs"><span>Accueil</span><span>/</span><span>Analyse</span><span>/</span><span>${safeQuery}</span></div>
-
-          <section class="record-hero">
-            <div>
-              <div class="eyebrow">Analyse immobilière</div>
-              <h1>${score}/100</h1>
-              <div class="input-type">${analysis.inputType} · ${analysis.confidence}</div>
-              <div class="hero-sub">${analysis.verdict}</div>
-              <div class="record-subline">${analysis.subtitle}</div>
-
-              <div class="verdict-line">
-                <div class="verdict-item">
-                  <strong>Lecture rapide</strong>
-                  ${analysis.fastRead}
-                </div>
-                <div class="verdict-item">
-                  <strong>À vérifier</strong>
-                  ${analysis.checkRead}
-                </div>
-              </div>
-            </div>
-
-            <aside class="score-card ${visual.tone}">
-              <div>
-                <div class="score-label">PlaceCheck Index</div>
-                <div class="score-pill ${visual.tone}">${visual.label}</div>
-
-                <div class="score-visual">
-                  <div class="score-face">${renderFace(visual.face, visual.color)}</div>
-                  <div class="score-meta">
-                    <div class="score-status">${visual.label}</div>
-                    <div class="score-number">${score}<span class="score-denom">/100</span></div>
-                  </div>
-                </div>
-
-                <div class="score-brief">${analysis.summary}</div>
-              </div>
-            </aside>
-          </section>
-
-          <main class="record-main">
-            <section>
-              <h2>Catégories</h2>
-              <div class="category-grid">
-                ${renderCategory("life", "Qualité de vie", analysis.categories.life + "/100", "Commerces accessibles, vie de quartier agréable, environnement urbain plutôt favorable au quotidien.")}
-                ${renderCategory("price", "Prix & valeur", analysis.categories.price + "/100", "Prix globalement cohérent, mais pas une opportunité évidente. À regarder selon l’état réel du bien.")}
-                ${renderCategory("safety", "Sécurité & nuisances", analysis.categories.safety + "/100", "Quelques réserves possibles : bruit, circulation ou animation selon les horaires.")}
-                ${renderCategory("access", "Accessibilité", analysis.categories.access + "/100", "Bonne desserte, déplacements simples, services accessibles sans dépendre fortement de la voiture.")}
-                ${renderCategory("energy", "Énergie / logement", analysis.categories.energy + "/100", "Performance énergétique à vérifier : DPE, charges, confort d’été et confort d’hiver.")}
-              </div>
-            </section>
-
-            <section>
-              <h2>Lecture détaillée</h2>
-              <div class="detail-grid">
-                <article class="detail-card">
-                  <div class="detail-top">
-                    <div class="detail-title">Vie quotidienne</div>
-                    <div class="detail-score">Bon</div>
-                  </div>
-                  <div class="detail-text">L’adresse semble adaptée à un usage quotidien simple : commerces, services et déplacements courts. Le confort réel dépendra surtout de l’étage, de l’exposition et de l’isolation.</div>
-                </article>
-
-                <article class="detail-card">
-                  <div class="detail-top">
-                    <div class="detail-title">Décision d’achat</div>
-                    <div class="detail-score">À cadrer</div>
-                  </div>
-                  <div class="detail-text">Le bien peut être intéressant, mais la décision doit surtout se jouer sur le prix final, les travaux éventuels et la qualité de la copropriété.</div>
-                </article>
-
-                <article class="detail-card">
-                  <div class="detail-top">
-                    <div class="detail-title">Décision de location</div>
-                    <div class="detail-score">Favorable</div>
-                  </div>
-                  <div class="detail-text">Pour une location, le secteur paraît lisible et pratique. Les points sensibles restent le bruit, les charges et le confort thermique.</div>
-                </article>
-
-                <article class="detail-card">
-                  <div class="detail-top">
-                    <div class="detail-title">Question clé</div>
-                    <div class="detail-score">Avant visite</div>
-                  </div>
-                  <div class="detail-text">Le logement confirme-t-il la promesse de l’adresse ? C’est le point à trancher sur place : lumière, silence, état réel et qualité des parties communes.</div>
-                </article>
-              </div>
-            </section>
-
-            <section>
-              <h2>Signaux</h2>
-              <div class="signal-columns">
-                <div class="signal-box">
-                  <h3>Signaux positifs</h3>
-                  <ul class="mini-list">
-                    <li>Bonne accessibilité au quotidien</li>
-                    <li>Vie de quartier active</li>
-                    <li>Demande locative probablement solide</li>
-                    <li>Services et commerces proches</li>
-                  </ul>
-                </div>
-                <div class="signal-box">
-                  <h3>Points à vérifier</h3>
-                  <ul class="mini-list">
-                    <li>Nuisances sonores selon les horaires</li>
-                    <li>DPE et charges réelles du logement</li>
-                    <li>Cohérence du prix avec l’état du bien</li>
-                    <li>Stationnement et circulation aux heures de pointe</li>
-                  </ul>
-                </div>
-              </div>
-            </section>
-
-            <section>
-              <h2>Ce que PlaceCheck retient</h2>
-              <div class="summary-card">Le lieu présente un bon potentiel d’usage, notamment pour une résidence principale ou une location longue durée. Le principal enjeu n’est pas l’adresse elle-même, mais la cohérence entre le prix demandé, l’état du logement et les nuisances réelles sur place.</div>
-            </section>
-
-            <section>
-              <h2>Questions avant décision</h2>
-              <div class="summary-card">
-                <div class="question-grid">
-                  <div class="question-row">
-                    <div class="question-number">01</div>
-                    <div>Le prix reste-t-il cohérent une fois les travaux, charges et frais intégrés ?</div>
-                  </div>
-                  <div class="question-row">
-                    <div class="question-number">02</div>
-                    <div>Le logement est-il réellement calme aux moments où vous y vivrez ?</div>
-                  </div>
-                  <div class="question-row">
-                    <div class="question-number">03</div>
-                    <div>Le DPE traduit-il un vrai inconfort ou seulement un défaut améliorable ?</div>
-                  </div>
-                  <div class="question-row">
-                    <div class="question-number">04</div>
-                    <div>L’adresse restera-t-elle désirable dans trois à cinq ans ?</div>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section>
-              <h2>Sources</h2>
-              <div class="source-list">
-                <div class="source-row">
-                  <div class="source-domain">Données publiques</div>
-                  <div class="source-title">Prix immobiliers, DPE, transports, services et signaux urbains contextuels.</div>
-                </div>
-                <div class="source-row">
-                  <div class="source-domain">Analyse</div>
-                  <div class="source-title">Synthèse PlaceCheck à partir de l’adresse ou de l’annonce transmise.</div>
-                </div>
-              </div>
-            </section>
-          </main>
-        </div>
-      `;
-
-      showOnly("result");
-    }
-
     function renderCategory(type, title, score, text) {
       return `
         <article class="category-card">
