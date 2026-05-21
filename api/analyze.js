@@ -210,7 +210,7 @@ Structure JSON exacte :
         parsed.categories.priceText = "Prix au m² à documenter avec DVF et loyers de marché.";
       }
 
-      if (!/(m²|m2|€/i.test(parsed.categories.priceText || "")) && !/documenter/i.test(parsed.categories.priceText || "")) {
+      if (!/(m²|m2|€)/i.test(parsed.categories.priceText || "") && !/documenter/i.test(parsed.categories.priceText || "")) {
         parsed.categories.priceText = "Prix au m² à documenter avec DVF et loyers de marché.";
       }
 
