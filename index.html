@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PlaceCheck</title>
-  <!-- PlaceCheck v8 hard clean: no fake results, no lecture détaillée -->
   <style>
     @font-face { font-family: "Radial"; src: url("Radial Regular.otf") format("opentype"); font-weight: 400; font-style: normal; font-display: swap; }
     @font-face { font-family: "Radial"; src: url("Radial Semi Bold.otf") format("opentype"); font-weight: 600; font-style: normal; font-display: swap; }
@@ -12,7 +11,7 @@
     :root {
       --bg:#3f3bd8;
       --bg-deep:#3430c5;
-      --panel:rgba(20, 22, 80, 0.20);
+      --panel:rgba(20,22,80,0.20);
       --border:rgba(255,255,255,0.16);
       --border-strong:rgba(255,255,255,0.32);
       --text:#f7f4ef;
@@ -30,794 +29,162 @@
 
     * { box-sizing: border-box; }
     html { background: var(--bg); scroll-behavior: smooth; }
-
     body {
-      margin: 0;
-      min-height: 100vh;
+      margin:0;
+      min-height:100vh;
       background:
         radial-gradient(circle at 20% 0%, rgba(255,255,255,0.10), transparent 34%),
         linear-gradient(180deg, var(--bg) 0%, var(--bg-deep) 100%);
-      color: var(--text);
-      font-family: "Radial", Arial, Helvetica, sans-serif;
+      color:var(--text);
+      font-family:"Radial", Arial, Helvetica, sans-serif;
       -webkit-font-smoothing: antialiased;
       text-rendering: geometricPrecision;
     }
 
-    a { color: inherit; text-decoration: none; }
-    button, input { font-family: inherit; }
+    a { color:inherit; text-decoration:none; }
+    button, input { font-family:inherit; }
 
-    .page {
-      max-width: var(--max);
-      margin: 0 auto;
-      padding: 26px var(--gutter) 110px;
-    }
-
+    .page { max-width:var(--max); margin:0 auto; padding:26px var(--gutter) 110px; }
     .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 4px 0 24px;
-      border-bottom: 1px solid var(--border);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      font-size: 12px;
+      display:flex; justify-content:space-between; align-items:center;
+      padding:4px 0 24px; border-bottom:1px solid var(--border);
+      text-transform:uppercase; letter-spacing:.08em; font-size:12px;
     }
+    .brand { display:flex; align-items:center; gap:14px; cursor:pointer; }
+    .brand-mark { width:10px; height:10px; background:var(--text); border-radius:50%; box-shadow:0 0 0 4px rgba(255,255,255,.10); }
+    .topnav { display:flex; gap:20px; color:var(--muted); }
+    .nav-link.active, .nav-link:hover { color:var(--text); }
 
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      cursor: pointer;
-    }
+    .hero { min-height:76vh; display:flex; flex-direction:column; justify-content:center; padding:60px 0 40px; }
+    .eyebrow { color:var(--soft); text-transform:uppercase; letter-spacing:.1em; font-size:12px; margin-bottom:20px; }
+    h1 { margin:0; max-width:1080px; font-weight:600; font-size:clamp(68px, 11vw, 140px); line-height:.9; letter-spacing:-.045em; text-transform:uppercase; }
+    h2 { margin:0 0 16px; font-size:34px; line-height:.95; letter-spacing:-.035em; text-transform:uppercase; font-weight:600; }
+    .hero-sub { margin-top:26px; max-width:760px; font-size:clamp(22px, 2.7vw, 34px); line-height:1.08; letter-spacing:-.025em; }
 
-    .brand-mark {
-      width: 10px;
-      height: 10px;
-      background: var(--text);
-      border-radius: 50%;
-      box-shadow: 0 0 0 4px rgba(255,255,255,0.10);
-    }
-
-    .topnav {
-      display: flex;
-      gap: 20px;
-      color: var(--muted);
-    }
-
-    .nav-link.active,
-    .nav-link:hover {
-      color: var(--text);
-    }
-
-    .hero {
-      min-height: 76vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding: 60px 0 40px;
-    }
-
-    .eyebrow {
-      color: var(--soft);
-      text-transform: uppercase;
-      letter-spacing: .1em;
-      font-size: 12px;
-      margin-bottom: 20px;
-    }
-
-    h1 {
-      margin: 0;
-      max-width: 1080px;
-      font-weight: 600;
-      font-size: clamp(68px, 11vw, 140px);
-      line-height: .9;
-      letter-spacing: -.045em;
-      text-transform: uppercase;
-    }
-
-    .hero-sub {
-      margin-top: 26px;
-      max-width: 760px;
-      font-size: clamp(22px, 2.7vw, 34px);
-      line-height: 1.08;
-      letter-spacing: -.025em;
-    }
-
-    .search-wrap {
-      margin-top: 42px;
-      max-width: 980px;
-      border-top: 1px solid var(--border);
-      padding-top: 18px;
-    }
-
-    .search {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 12px;
-      align-items: stretch;
-    }
-
+    .search-wrap { margin-top:42px; max-width:980px; border-top:1px solid var(--border); padding-top:18px; }
+    .search { display:grid; grid-template-columns:1fr auto; gap:12px; align-items:stretch; }
     .search input {
-      width: 100%;
-      height: 72px;
-      border: 1px solid var(--border);
-      background: var(--panel);
-      color: var(--text);
-      padding: 0 22px;
-      font-size: 18px;
-      outline: none;
-      border-radius: var(--radius);
-      backdrop-filter: blur(10px);
+      width:100%; height:72px; border:1px solid var(--border); background:var(--panel);
+      color:var(--text); padding:0 22px; font-size:18px; outline:none; border-radius:var(--radius); backdrop-filter:blur(10px);
     }
-
-    .search input::placeholder {
-      color: rgba(247,244,239,0.48);
-    }
-
+    .search input::placeholder { color:rgba(247,244,239,.48); }
     .search button {
-      height: 72px;
-      min-width: 190px;
-      border: 1px solid var(--border-strong);
-      background: var(--text);
-      color: #2723b8;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      font-size: 12px;
-      cursor: pointer;
-      border-radius: var(--radius);
+      height:72px; min-width:190px; border:1px solid var(--border-strong); background:var(--text);
+      color:#2723b8; text-transform:uppercase; letter-spacing:.08em; font-size:12px; cursor:pointer; border-radius:var(--radius);
     }
-
-    .examples-inline {
-      margin-top: 16px;
-      font-size: 12px;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      color: var(--soft);
-    }
-
-    .choice-row {
-      margin-top: 18px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
+    .search button:disabled { opacity:.55; cursor:default; }
+    .choice-row { margin-top:14px; display:flex; flex-wrap:wrap; gap:10px; }
     .choice {
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.04);
-      padding: 9px 11px;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      color: var(--muted);
-      cursor: pointer;
+      border:1px solid var(--border); background:rgba(255,255,255,.04); padding:9px 11px;
+      font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); cursor:pointer;
+    }
+    .choice.active { color:var(--text); border-color:var(--border-strong); background:rgba(255,255,255,.10); }
+
+    .loading { margin-top:14px; font-size:13px; letter-spacing:.06em; text-transform:uppercase; color:var(--soft); }
+    .dots::after { content:""; animation:dots 1.4s infinite; }
+    @keyframes dots { 0%{content:"";} 25%{content:".";} 50%{content:"..";} 75%{content:"...";} 100%{content:"";} }
+    .error-box {
+      margin-top:14px; color:var(--red); padding:14px 16px; font-size:13px; line-height:1.45;
+      border:1px solid rgba(212,117,117,.35); background:var(--panel);
     }
 
-    .choice.active {
-      color: var(--text);
-      border-color: var(--border-strong);
-      background: rgba(255,255,255,0.10);
-    }
+    .hidden { display:none; }
 
-    .preview-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 12px;
-      margin-top: 30px;
-      max-width: 980px;
-    }
-
-    .preview-card {
-      min-height: 160px;
-      padding: 18px;
-      border: 1px solid var(--border);
-      background: rgba(20, 22, 80, 0.16);
-      backdrop-filter: blur(10px);
-    }
-
-    .preview-label {
-      color: var(--soft);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      font-size: 11px;
-      margin-bottom: 18px;
-    }
-
-    .preview-value {
-      font-size: 42px;
-      line-height: .9;
-      letter-spacing: -.04em;
-      font-weight: 600;
-    }
-
-    .preview-text {
-      margin-top: 12px;
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.45;
-    }
-
-    .score-demo {
-      display: grid;
-      grid-template-columns: 280px 1fr;
-      gap: 28px;
-      align-items: start;
-      max-width: 980px;
-      margin-top: 30px;
-      padding-top: 30px;
-      border-top: 1px solid var(--border);
-    }
-
-    .score-card {
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      min-height: 310px;
-      overflow: hidden;
-      width: 280px;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      backdrop-filter: blur(10px);
-    }
-
-    .score-card.green {
-      background: linear-gradient(to bottom, rgba(148,198,166,0.18), rgba(148,198,166,0.04)), var(--panel);
-      border-color: rgba(148,198,166,0.42);
-    }
-
-    .score-card.green-soft {
-      background: linear-gradient(to bottom, rgba(174,190,255,0.18), rgba(174,190,255,0.04)), var(--panel);
-      border-color: rgba(174,190,255,0.42);
-    }
-
-    .score-card.yellow {
-      background: linear-gradient(to bottom, rgba(224,201,109,0.18), rgba(224,201,109,0.04)), var(--panel);
-      border-color: rgba(224,201,109,0.42);
-    }
-
-    .score-card.orange {
-      background: linear-gradient(to bottom, rgba(215,150,102,0.18), rgba(215,150,102,0.04)), var(--panel);
-      border-color: rgba(215,150,102,0.42);
-    }
-
-    .score-card.red {
-      background: linear-gradient(to bottom, rgba(212,117,117,0.18), rgba(212,117,117,0.04)), var(--panel);
-      border-color: rgba(212,117,117,0.42);
-    }
-
-    .score-label {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      color: var(--soft);
-    }
-
-    .score-pill {
-      display: inline-block;
-      margin-top: 12px;
-      max-width: 100%;
-      padding: 8px 10px;
-      border: 1px solid var(--border);
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      white-space: normal;
-      line-height: 1.25;
-      word-break: break-word;
-    }
-
-    .score-pill.green { color: var(--green); border-color: rgba(148,198,166,0.45); }
-    .score-pill.green-soft { color: var(--blue-soft); border-color: rgba(174,190,255,0.45); }
-    .score-pill.yellow { color: var(--yellow); border-color: rgba(224,201,109,0.45); }
-    .score-pill.orange { color: var(--orange); border-color: rgba(215,150,102,0.45); }
-    .score-pill.red { color: var(--red); border-color: rgba(212,117,117,0.45); }
-
-    .score-visual {
-      margin-top: 18px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .score-face {
-      width: 86px;
-      height: 86px;
-      flex: 0 0 86px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .score-face svg {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-
-    .score-meta {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .score-status {
-      font-size: 22px;
-      line-height: 1;
-      text-transform: uppercase;
-      letter-spacing: -.01em;
-      font-weight: 600;
-    }
-
-    .score-number {
-      font-size: 34px;
-      line-height: 1;
-      letter-spacing: -.04em;
-      font-weight: 600;
-    }
-
-    .score-denom {
-      font-size: 18px;
-      color: var(--muted);
-      margin-left: 4px;
-    }
-
-    .score-brief {
-      margin-top: 18px;
-      overflow: hidden;
-      font-size: 14px;
-      line-height: 1.45;
-      color: var(--muted);
-      max-width: 100%;
-    }
-
-    .signal-list {
-      display: grid;
-      gap: 10px;
-      color: var(--muted);
-      font-size: 15px;
-      line-height: 1.45;
-      padding-top: 2px;
-    }
-
-    .signal-item {
-      padding: 12px 0;
-      border-top: 1px solid var(--border);
-      display: grid;
-      grid-template-columns: 36px 1fr;
-      gap: 10px;
-      align-items: start;
-    }
-
-    .signal-picto {
-      width: 22px;
-      height: 22px;
-      display: block;
-    }
-
-    .signal-picto svg {
-      width: 100%;
-      height: 100%;
-      display: block;
-      stroke: var(--text);
-      opacity: .86;
-    }
-
-    .footer {
-      margin-top: 70px;
-      padding-top: 18px;
-      border-top: 1px solid var(--border);
-      display: grid;
-      grid-template-columns: 1fr 1.2fr;
-      gap: 24px;
-      align-items: start;
-    }
-
-    .footer-links {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 18px;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      color: var(--muted);
-    }
-
-    .footer-note {
-      font-size: 12px;
-      line-height: 1.5;
-      color: var(--soft);
-      max-width: 720px;
-    }
-
-
-    .record-wrap {
-      padding-top: 24px;
-    }
-
-    .crumbs {
-      margin-top: 20px;
-      color: var(--soft);
-      text-transform: uppercase;
-      letter-spacing: .09em;
-      font-size: 11px;
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .record-hero {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 280px;
-      gap: 28px;
-      padding: 30px 0 30px;
-      border-bottom: 1px solid var(--border);
-      align-items: start;
-      max-width: 980px;
-    }
-
-    .record-hero > * {
-      min-width: 0;
-    }
-
-    h2 {
-      margin: 0 0 16px;
-      font-size: 34px;
-      line-height: .95;
-      letter-spacing: -.035em;
-      text-transform: uppercase;
-      font-weight: 600;
-    }
-
-    .record-subline {
-      margin-top: 16px;
-      font-size: 18px;
-      color: var(--muted);
-      line-height: 1.4;
-      max-width: 760px;
-    }
-
-    .record-main {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 30px;
-      padding-top: 30px;
-      max-width: 980px;
-    }
-
-    .category-grid {
-      display: grid;
-      gap: 12px;
-    }
-
-    .category-card {
-      padding: 16px 18px;
-      border: 1px solid var(--border);
-      background: var(--panel);
-      backdrop-filter: blur(10px);
-    }
-
-    .category-top {
-      display: flex;
-      justify-content: space-between;
-      gap: 14px;
-      align-items: flex-start;
-      margin-bottom: 10px;
-    }
-
-    .category-title {
-      display: grid;
-      grid-template-columns: 30px 1fr;
-      gap: 10px;
-      align-items: center;
-      font-size: 26px;
-      line-height: .95;
-      letter-spacing: -.03em;
-      text-transform: uppercase;
-    }
-
-    .category-score {
-      border: 1px solid var(--border);
-      padding: 8px 10px;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      white-space: nowrap;
-      color: var(--text);
-    }
-
-    .category-text {
-      font-size: 15px;
-      line-height: 1.54;
-      color: var(--muted);
-      margin-left: 40px;
-    }
-
-    .summary-card {
-      padding: 18px;
-      border: 1px solid var(--border);
-      background: var(--panel);
-      backdrop-filter: blur(10px);
-      font-size: 17px;
-      line-height: 1.5;
-      color: var(--muted);
-    }
-
-    .verdict-line {
-      margin-top: 20px;
-      max-width: 760px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .verdict-item {
-      padding: 14px 16px;
-      overflow: hidden;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.04);
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.45;
-    }
-
-    .verdict-item strong {
-      display: block;
-      color: var(--text);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      font-size: 11px;
-      margin-bottom: 8px;
-    }
+    .record-wrap { padding-top:24px; }
+    .crumbs { margin-top:20px; color:var(--soft); text-transform:uppercase; letter-spacing:.09em; font-size:11px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .record-hero { display:grid; grid-template-columns:minmax(0,1fr) 280px; gap:28px; padding:30px 0; border-bottom:1px solid var(--border); align-items:start; max-width:980px; }
+    .record-subline { margin-top:16px; font-size:18px; color:var(--muted); line-height:1.4; max-width:760px; }
 
     .input-type {
-      display: inline-block;
-      margin-top: 18px;
-      padding: 8px 10px;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      font-size: 11px;
-      background: rgba(255,255,255,0.04);
+      display:inline-block; margin-top:18px; padding:8px 10px; border:1px solid var(--border);
+      color:var(--muted); text-transform:uppercase; letter-spacing:.08em; font-size:11px; background:rgba(255,255,255,.04);
     }
 
-    .question-grid {
-      display: grid;
-      gap: 10px;
+    .verdict-line { margin-top:20px; max-width:760px; display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .verdict-item {
+      padding:14px 16px; overflow:hidden; border:1px solid var(--border); background:rgba(255,255,255,.04);
+      color:var(--muted); font-size:14px; line-height:1.45;
     }
+    .verdict-item strong { display:block; color:var(--text); text-transform:uppercase; letter-spacing:.08em; font-size:11px; margin-bottom:8px; }
 
-    .question-row {
-      padding: 14px 0;
-      border-top: 1px solid var(--border);
-      color: var(--muted);
-      font-size: 16px;
-      line-height: 1.35;
-      display: grid;
-      grid-template-columns: 34px 1fr;
-      gap: 12px;
-      align-items: start;
+    .score-card {
+      padding:20px; display:flex; flex-direction:column; min-height:310px; overflow:hidden; width:280px;
+      background:var(--panel); border:1px solid var(--border); backdrop-filter:blur(10px);
     }
+    .score-card.green { background:linear-gradient(to bottom, rgba(148,198,166,.18), rgba(148,198,166,.04)), var(--panel); border-color:rgba(148,198,166,.42); }
+    .score-card.green-soft { background:linear-gradient(to bottom, rgba(174,190,255,.18), rgba(174,190,255,.04)), var(--panel); border-color:rgba(174,190,255,.42); }
+    .score-card.yellow { background:linear-gradient(to bottom, rgba(224,201,109,.18), rgba(224,201,109,.04)), var(--panel); border-color:rgba(224,201,109,.42); }
+    .score-card.orange { background:linear-gradient(to bottom, rgba(215,150,102,.18), rgba(215,150,102,.04)), var(--panel); border-color:rgba(215,150,102,.42); }
+    .score-card.red { background:linear-gradient(to bottom, rgba(212,117,117,.18), rgba(212,117,117,.04)), var(--panel); border-color:rgba(212,117,117,.42); }
 
-    .question-number {
-      color: var(--soft);
-      font-size: 12px;
-      letter-spacing: .08em;
-      text-transform: uppercase;
+    .score-label { font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--soft); }
+    .score-pill {
+      display:inline-block; margin-top:12px; max-width:100%; padding:8px 10px; border:1px solid var(--border);
+      font-size:11px; text-transform:uppercase; letter-spacing:.08em; line-height:1.25;
     }
+    .score-pill.green { color:var(--green); border-color:rgba(148,198,166,.45); }
+    .score-pill.green-soft { color:var(--blue-soft); border-color:rgba(174,190,255,.45); }
+    .score-pill.yellow { color:var(--yellow); border-color:rgba(224,201,109,.45); }
+    .score-pill.orange { color:var(--orange); border-color:rgba(215,150,102,.45); }
+    .score-pill.red { color:var(--red); border-color:rgba(212,117,117,.45); }
 
-    .detail-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
+    .score-visual { margin-top:18px; display:flex; align-items:center; gap:14px; }
+    .score-face { width:86px; height:86px; flex:0 0 86px; display:flex; align-items:center; justify-content:center; }
+    .score-face svg { width:100%; height:100%; display:block; }
+    .score-status { font-size:22px; line-height:1; text-transform:uppercase; letter-spacing:-.01em; font-weight:600; }
+    .score-number { margin-top:6px; font-size:34px; line-height:1; letter-spacing:-.04em; font-weight:600; }
+    .score-denom { font-size:18px; color:var(--muted); margin-left:4px; }
+    .score-brief { margin-top:18px; overflow:hidden; font-size:14px; line-height:1.45; color:var(--muted); }
+
+    .record-main { display:grid; grid-template-columns:1fr; gap:30px; padding-top:30px; max-width:980px; }
+    .category-grid { display:grid; gap:12px; }
+    .category-card { padding:16px 18px; border:1px solid var(--border); background:var(--panel); backdrop-filter:blur(10px); }
+    .category-top { display:flex; justify-content:space-between; gap:14px; align-items:flex-start; margin-bottom:10px; }
+    .category-title { display:grid; grid-template-columns:30px 1fr; gap:10px; align-items:center; font-size:26px; line-height:.95; letter-spacing:-.03em; text-transform:uppercase; }
+    .category-score { border:1px solid var(--border); padding:8px 10px; font-size:11px; text-transform:uppercase; letter-spacing:.08em; white-space:nowrap; color:var(--text); }
+    .category-text { font-size:15px; line-height:1.54; color:var(--muted); margin-left:40px; }
+
+    .signal-picto { width:22px; height:22px; display:block; }
+    .signal-picto svg { width:100%; height:100%; display:block; stroke:var(--text); opacity:.86; }
+
+    .signal-columns { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .signal-box { padding:18px; border:1px solid var(--border); background:var(--panel); backdrop-filter:blur(10px); }
+    .signal-box h3 { margin:0 0 16px; font-size:18px; line-height:1; letter-spacing:-.02em; text-transform:uppercase; font-weight:600; }
+    .mini-list { display:grid; gap:10px; margin:0; padding:0; list-style:none; color:var(--muted); font-size:15px; line-height:1.35; }
+    .mini-list li { padding-top:10px; border-top:1px solid var(--border); }
+
+    .summary-card { padding:18px; border:1px solid var(--border); background:var(--panel); backdrop-filter:blur(10px); font-size:17px; line-height:1.5; color:var(--muted); }
+    .question-grid { display:grid; gap:10px; }
+    .question-row { padding:14px 0; border-top:1px solid var(--border); color:var(--muted); font-size:16px; line-height:1.35; display:grid; grid-template-columns:34px 1fr; gap:12px; align-items:start; }
+    .question-number { color:var(--soft); font-size:12px; letter-spacing:.08em; text-transform:uppercase; }
+
+    .source-list { display:grid; grid-template-columns:1fr; gap:6px; margin-top:14px; }
+    .source-row { padding:12px 0; border-top:1px solid var(--border); display:grid; grid-template-columns:170px 1fr; gap:18px; align-items:start; }
+    .source-domain { color:var(--soft); text-transform:uppercase; letter-spacing:.08em; font-size:11px; }
+    .source-title { font-size:14px; line-height:1.35; color:var(--text); }
+
+    .about-title { margin:0; max-width:760px; font-weight:600; font-size:clamp(42px, 6vw, 72px); line-height:.92; letter-spacing:-.04em; text-transform:uppercase; }
+    .about-intro { margin-top:20px; max-width:760px; font-size:22px; line-height:1.2; letter-spacing:-.02em; color:var(--muted); }
+    .about-section { padding:42px 0; border-top:1px solid var(--border); }
+    .about-section h2 { margin:0 0 18px; font-size:20px; line-height:1; letter-spacing:-.02em; text-transform:uppercase; }
+    .about-section p { margin:0; max-width:720px; color:var(--muted); font-size:17px; line-height:1.75; }
+
+    .footer { margin-top:70px; padding-top:18px; border-top:1px solid var(--border); display:grid; grid-template-columns:1fr 1.2fr; gap:24px; align-items:start; }
+    .footer-links { display:flex; flex-wrap:wrap; gap:18px; font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
+    .footer-note { font-size:12px; line-height:1.5; color:var(--soft); max-width:720px; }
+
+    @media (max-width:800px) {
+      .record-hero { grid-template-columns:1fr; max-width:none; }
+      .score-card { width:100%; max-width:360px; }
+      .signal-columns, .verdict-line { grid-template-columns:1fr; }
+      .source-row { grid-template-columns:1fr; gap:6px; }
     }
-
-    .detail-card {
-      padding: 18px;
-      border: 1px solid var(--border);
-      background: var(--panel);
-      backdrop-filter: blur(10px);
-      min-height: 160px;
-    }
-
-    .detail-top {
-      display: flex;
-      justify-content: space-between;
-      gap: 14px;
-      align-items: flex-start;
-      margin-bottom: 16px;
-    }
-
-    .detail-title {
-      color: var(--text);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      font-size: 12px;
-    }
-
-    .detail-score {
-      color: var(--soft);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      font-size: 11px;
-      white-space: nowrap;
-    }
-
-    .detail-text {
-      color: var(--muted);
-      font-size: 15px;
-      line-height: 1.5;
-    }
-
-    .source-list {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 6px;
-      margin-top: 14px;
-    }
-
-    .source-row {
-      padding: 12px 0;
-      background: transparent;
-      border-top: 1px solid var(--border);
-      display: grid;
-      grid-template-columns: 170px 1fr;
-      gap: 18px;
-      align-items: start;
-    }
-
-    .source-domain {
-      color: var(--soft);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      font-size: 11px;
-    }
-
-    .source-title {
-      font-size: 14px;
-      line-height: 1.35;
-      color: var(--text);
-    }
-
-    .section-kicker {
-      color: var(--soft);
-      text-transform: uppercase;
-      letter-spacing: .09em;
-      font-size: 11px;
-      margin-bottom: 10px;
-    }
-
-    .signal-columns {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .signal-box {
-      padding: 18px;
-      border: 1px solid var(--border);
-      background: var(--panel);
-      backdrop-filter: blur(10px);
-    }
-
-    .signal-box h3 {
-      margin: 0 0 16px;
-      font-size: 18px;
-      line-height: 1;
-      letter-spacing: -.02em;
-      text-transform: uppercase;
-      font-weight: 600;
-    }
-
-    .mini-list {
-      display: grid;
-      gap: 10px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-      color: var(--muted);
-      font-size: 15px;
-      line-height: 1.35;
-    }
-
-    .mini-list li {
-      padding-top: 10px;
-      border-top: 1px solid var(--border);
-    }
-
-    .error-box {
-      margin-top: 14px;
-      color: var(--red);
-      padding: 14px 16px;
-      font-size: 13px;
-      line-height: 1.45;
-      border: 1px solid rgba(212,117,117,0.35);
-      background: var(--panel);
-    }
-
-    .loading {
-      margin-top: 14px;
-      font-size: 13px;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      color: var(--soft);
-    }
-
-    .dots::after {
-      content: "";
-      animation: dots 1.4s infinite;
-    }
-
-    @keyframes dots {
-      0% { content: ""; }
-      25% { content: "."; }
-      50% { content: ".."; }
-      75% { content: "..."; }
-      100% { content: ""; }
-    }
-
-    .about-title {
-      margin: 0;
-      max-width: 760px;
-      font-weight: 600;
-      font-size: clamp(42px, 6vw, 72px);
-      line-height: .92;
-      letter-spacing: -.04em;
-      text-transform: uppercase;
-    }
-
-    .about-intro {
-      margin-top: 20px;
-      max-width: 760px;
-      font-size: 22px;
-      line-height: 1.2;
-      letter-spacing: -.02em;
-      color: var(--muted);
-    }
-
-    .about-section {
-      padding: 42px 0;
-      border-top: 1px solid var(--border);
-    }
-
-    .about-section h2 {
-      margin: 0 0 18px;
-      font-size: 20px;
-      line-height: 1;
-      letter-spacing: -.02em;
-      text-transform: uppercase;
-    }
-
-    .about-section p {
-      margin: 0;
-      max-width: 720px;
-      color: var(--muted);
-      font-size: 17px;
-      line-height: 1.75;
-    }
-
-    .hidden { display: none; }
-
-    @media (max-width: 800px) {
-      .preview-grid { grid-template-columns: 1fr; }
-      .score-demo { grid-template-columns: 1fr; }
-      .score-card { width: 100%; max-width: 360px; }
-      .record-hero { grid-template-columns: 1fr; max-width: none; }
-      .signal-columns { grid-template-columns: 1fr; }
-      .detail-grid { grid-template-columns: 1fr; }
-      .verdict-line { grid-template-columns: 1fr; }
-      .source-row { grid-template-columns: 1fr; gap: 6px; }
-    }
-
-    @media (max-width: 640px) {
-      .page { padding: 20px 18px 80px; }
-      .topnav { gap: 14px; font-size: 11px; }
-      .search { grid-template-columns: 1fr; }
-      h1 { font-size: 58px; }
-      .footer { grid-template-columns: 1fr; }
-      .score-face { width: 76px; height: 76px; flex: 0 0 76px; }
-      .score-number { font-size: 30px; }
-      .score-status { font-size: 20px; }
+    @media (max-width:640px) {
+      .page { padding:20px 18px 80px; }
+      .topnav { gap:14px; font-size:11px; }
+      .search { grid-template-columns:1fr; }
+      h1 { font-size:58px; }
+      .footer { grid-template-columns:1fr; }
     }
   </style>
 </head>
@@ -850,7 +217,6 @@
           <div id="loading-indicator" class="loading hidden">
             <span id="loading-text">Analyse</span><span class="dots"></span>
           </div>
-
           <div class="error-box hidden" id="error-box"></div>
 
           <div class="choice-row">
@@ -858,7 +224,6 @@
             <button class="choice" type="button" data-mode="address">Adresse</button>
             <button class="choice" type="button" data-mode="listing">Annonce</button>
           </div>
-
 
           <div style="height:40px;"></div>
         </div>
@@ -873,31 +238,14 @@
         <h1 class="about-title">À propos de PlaceCheck</h1>
         <div class="about-intro">PlaceCheck est un outil de lecture, pas une agence immobilière.</div>
       </section>
-
-      <section class="about-section">
-        <h2>Ce que ça fait</h2>
-        <p>PlaceCheck aide à lire une adresse ou une annonce avant d’acheter ou de louer. Le site synthétise les signaux importants : qualité de vie, prix, sécurité, accessibilité et énergie.</p>
-      </section>
-
-      <section class="about-section">
-        <h2>Comment lire le score</h2>
-        <p>Le score n’est pas une vérité absolue. C’est une interprétation rapide des signaux disponibles, pensée pour aider à poser les bonnes questions avant une visite ou une décision.</p>
-      </section>
-
-      <section class="about-section">
-        <h2>Ce que ça ne remplace pas</h2>
-        <p>PlaceCheck ne remplace pas une visite, un diagnostic officiel, un conseil notarial ou une estimation professionnelle. C’est un filtre de vigilance et de contexte.</p>
-      </section>
+      <section class="about-section"><h2>Ce que ça fait</h2><p>PlaceCheck aide à lire une adresse ou une annonce avant d’acheter ou de louer. Le site synthétise les signaux importants : qualité de vie, prix, sécurité, accessibilité et énergie.</p></section>
+      <section class="about-section"><h2>Comment lire le score</h2><p>Le score n’est pas une vérité absolue. C’est une interprétation rapide des signaux disponibles, pensée pour aider à poser les bonnes questions avant une visite ou une décision.</p></section>
+      <section class="about-section"><h2>Ce que ça ne remplace pas</h2><p>PlaceCheck ne remplace pas une visite, un diagnostic officiel, un conseil notarial ou une estimation professionnelle. C’est un filtre de vigilance et de contexte.</p></section>
     </section>
 
     <footer class="footer">
-      <div class="footer-links">
-        <a href="#/about">À propos</a>
-        <a href="#/">Recherche</a>
-      </div>
-      <div class="footer-note">
-        PlaceCheck synthétise des signaux publics et contextuels pour aider à lire une adresse ou une annonce. Le score n’est pas une estimation officielle : c’est une aide à la décision.
-      </div>
+      <div class="footer-links"><a href="#/about">À propos</a><a href="#/">Recherche</a></div>
+      <div class="footer-note">PlaceCheck synthétise des signaux publics et contextuels pour aider à lire une adresse ou une annonce. Le score n’est pas une estimation officielle : c’est une aide à la décision.</div>
     </footer>
   </div>
 
@@ -905,103 +253,6 @@
     const input = document.getElementById("place-input");
     const form = document.getElementById("place-form");
     const choices = document.querySelectorAll(".choice");
-    let mode = "auto";
-
-    document.querySelectorAll(".quick-example").forEach(btn => {
-      btn.addEventListener("click", () => {
-        input.value = btn.dataset.example;
-      });
-    });
-
-    choices.forEach(choice => {
-      choice.addEventListener("click", () => {
-        choices.forEach(c => c.classList.remove("active"));
-        choice.classList.add("active");
-        mode = choice.dataset.mode;
-
-        if (mode === "address") input.placeholder = "Entrez une adresse";
-        if (mode === "listing") input.placeholder = "Collez l’URL d’une annonce immobilière";
-        if (mode === "auto") input.placeholder = "Collez une annonce ou entrez une adresse";
-      });
-    });
-
-
-    function getScoreVisual(score) {
-      if (score >= 90) return { tone: "green", label: "Très favorable", face: "very_happy", color: "#94c6a6" };
-      if (score >= 75) return { tone: "green-soft", label: "Bonne adresse", face: "happy", color: "#aebeff" };
-      if (score >= 55) return { tone: "yellow", label: "Correct", face: "neutral", color: "#e0c96d" };
-      if (score >= 35) return { tone: "orange", label: "Réservé", face: "meh", color: "#d79666" };
-      if (score >= 10) return { tone: "red", label: "Points d’alerte", face: "sad", color: "#d47575" };
-      return { tone: "red", label: "Très risqué", face: "dead", color: "#d47575" };
-    }
-
-    function renderFace(type, color) {
-      if (type === "very_happy") {
-        return `
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="12" cy="12" r="10" stroke="${color}" stroke-width="1.5"/>
-            <circle cx="9" cy="10" r="1" fill="${color}"/>
-            <circle cx="15" cy="10" r="1" fill="${color}"/>
-            <path d="M7.5 13.8c1.8 2.6 7.2 2.6 9 0" stroke="${color}" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        `;
-      }
-
-      if (type === "happy") {
-        return `
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="12" cy="12" r="10" stroke="${color}" stroke-width="1.5"/>
-            <circle cx="9" cy="10" r="1" fill="${color}"/>
-            <circle cx="15" cy="10" r="1" fill="${color}"/>
-            <path d="M8 14c1.2 1.3 6.8 1.3 8 0" stroke="${color}" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        `;
-      }
-
-      if (type === "neutral") {
-        return `
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="12" cy="12" r="10" stroke="${color}" stroke-width="1.5"/>
-            <circle cx="9" cy="10" r="1" fill="${color}"/>
-            <circle cx="15" cy="10" r="1" fill="${color}"/>
-            <line x1="8" y1="14" x2="16" y2="14" stroke="${color}" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        `;
-      }
-
-      if (type === "meh") {
-        return `
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="12" cy="12" r="10" stroke="${color}" stroke-width="1.5"/>
-            <circle cx="9" cy="10" r="1" fill="${color}"/>
-            <circle cx="15" cy="10" r="1" fill="${color}"/>
-            <path d="M8 15c2-1 6-1 8 0" stroke="${color}" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        `;
-      }
-
-      if (type === "sad") {
-        return `
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="12" cy="12" r="10" stroke="${color}" stroke-width="1.5"/>
-            <circle cx="9" cy="10" r="1" fill="${color}"/>
-            <circle cx="15" cy="10" r="1" fill="${color}"/>
-            <path d="M8 16c1.5-2 6.5-2 8 0" stroke="${color}" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        `;
-      }
-
-      return `
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <circle cx="12" cy="12" r="10" stroke="${color}" stroke-width="1.5"/>
-          <path d="M8.3 9.3L9.7 10.7" stroke="${color}" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M9.7 9.3L8.3 10.7" stroke="${color}" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M14.3 9.3L15.7 10.7" stroke="${color}" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M15.7 9.3L14.3 10.7" stroke="${color}" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M8 16c1.5-2 6.5-2 8 0" stroke="${color}" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
-      `;
-    }
     const home = document.getElementById("view-home");
     const resultView = document.getElementById("view-result");
     const aboutView = document.getElementById("view-about");
@@ -1010,8 +261,20 @@
     const button = document.getElementById("search-button");
     const errorBox = document.getElementById("error-box");
 
-    const loadingMessages = ["Analyse", "Lecture des signaux", "Calcul du score"];
+    let mode = "auto";
     let loadingInterval = null;
+    const loadingMessages = ["Analyse", "Lecture des signaux", "Calcul du score"];
+
+    choices.forEach(choice => {
+      choice.addEventListener("click", () => {
+        choices.forEach(c => c.classList.remove("active"));
+        choice.classList.add("active");
+        mode = choice.dataset.mode;
+        if (mode === "address") input.placeholder = "Entrez une adresse";
+        if (mode === "listing") input.placeholder = "Collez l’URL d’une annonce immobilière";
+        if (mode === "auto") input.placeholder = "Collez une annonce ou entrez une adresse";
+      });
+    });
 
     function startLoadingMessages() {
       let i = 0;
@@ -1040,29 +303,6 @@
       setActiveNav(which === "result" ? "search" : which);
     }
 
-
-    function clampScore(value) {
-      let n = Number(value ?? 50);
-      if (!Number.isFinite(n)) n = 50;
-      if (n > 0 && n <= 10) n = n * 10;
-      return Math.max(0, Math.min(100, Math.round(n)));
-    }
-
-    function cleanText(value) {
-      return String(value ?? "")
-        .replace(/\[\s*([^\]]+)\s*\]\([^)]+\)/g, "$1")
-        .replace(/https?:\/\/\S+/g, "")
-        .replace(/\s+/g, " ")
-        .trim();
-    }
-
-
-    function limitText(value, max = 170) {
-      const text = cleanText(value);
-      if (text.length <= max) return text;
-      return text.slice(0, max).replace(/\s+\S*$/, "") + "…";
-    }
-
     function escapeHtml(value) {
       return String(value ?? "")
         .replaceAll("&", "&amp;")
@@ -1072,74 +312,213 @@
         .replaceAll("'", "&#39;");
     }
 
+    function cleanText(value) {
+      return String(value ?? "")
+        .replace(/\[\s*([^\]]+)\]\([^)]+\)/g, "$1")
+        .replace(/https?:\/\/\S+/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function limitText(value, max = 160) {
+      const text = cleanText(value);
+      if (text.length <= max) return text;
+      return text.slice(0, max).replace(/\s+\S*$/, "") + "…";
+    }
+
+    function clampScore(value) {
+      let n = Number(value ?? 50);
+      if (!Number.isFinite(n)) n = 50;
+      if (n > 0 && n <= 10) n = n * 10;
+      return Math.max(0, Math.min(100, Math.round(n)));
+    }
+
+    function getScoreVisual(score) {
+      if (score >= 90) return { tone:"green", label:"Très favorable", face:"very_happy", color:"#94c6a6" };
+      if (score >= 75) return { tone:"green-soft", label:"Bonne adresse", face:"happy", color:"#aebeff" };
+      if (score >= 55) return { tone:"yellow", label:"Correct", face:"neutral", color:"#e0c96d" };
+      if (score >= 35) return { tone:"orange", label:"Réservé", face:"meh", color:"#d79666" };
+      if (score >= 10) return { tone:"red", label:"Points d’alerte", face:"sad", color:"#d47575" };
+      return { tone:"red", label:"Très risqué", face:"dead", color:"#d47575" };
+    }
+
+    function renderFace(type, color) {
+      const eyes = `<circle cx="9" cy="10" r="1" fill="${color}"/><circle cx="15" cy="10" r="1" fill="${color}"/>`;
+      let mouth = `<path d="M8 14c1.2 1.3 6.8 1.3 8 0" stroke="${color}" stroke-width="1.5" stroke-linecap="round"/>`;
+      if (type === "very_happy") mouth = `<path d="M7.5 13.8c1.8 2.6 7.2 2.6 9 0" stroke="${color}" stroke-width="1.5" stroke-linecap="round"/>`;
+      if (type === "neutral") mouth = `<line x1="8" y1="14" x2="16" y2="14" stroke="${color}" stroke-width="1.5" stroke-linecap="round"/>`;
+      if (type === "meh") mouth = `<path d="M8 15c2-1 6-1 8 0" stroke="${color}" stroke-width="1.5" stroke-linecap="round"/>`;
+      if (type === "sad") mouth = `<path d="M8 16c1.5-2 6.5-2 8 0" stroke="${color}" stroke-width="1.5" stroke-linecap="round"/>`;
+      if (type === "dead") return `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="${color}" stroke-width="1.5"/><path d="M8.3 9.3L9.7 10.7M9.7 9.3L8.3 10.7M14.3 9.3L15.7 10.7M15.7 9.3L14.3 10.7" stroke="${color}" stroke-width="1.5" stroke-linecap="round"/><path d="M8 16c1.5-2 6.5-2 8 0" stroke="${color}" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+      return `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="${color}" stroke-width="1.5"/>${eyes}${mouth}</svg>`;
+    }
+
     function getCategoryIcon(type) {
       const icons = {
         life: `<svg viewBox="0 0 24 24" fill="none"><path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z" stroke-width="1.5" stroke-linejoin="round"/></svg>`,
         price: `<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke-width="1.5"/><path d="M14.5 8.8c-.6-.5-1.4-.8-2.4-.8-2 0-3.6 1.7-3.6 4s1.6 4 3.6 4c1 0 1.8-.3 2.4-.8" stroke-width="1.5" stroke-linecap="round"/><path d="M7 11h6M7 13h6" stroke-width="1.5" stroke-linecap="round"/></svg>`,
-        safety: `<svg viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3v5c0 4.6-2.8 7.8-7 10-4.2-2.2-7-5.4-7-10V6l7-3z" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 12l2 2 4-5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+        safety: `<svg viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3v5c0 4.6-2.8 7.8-7 10-4.2-2.2-7-5.4-7-10V6l7-3z" stroke-width="1.5" stroke-linejoin="round"/></svg>`,
         access: `<svg viewBox="0 0 24 24" fill="none"><rect x="6" y="4" width="12" height="13" rx="2" stroke-width="1.5"/><path d="M9 7h6M8.5 11h7" stroke-width="1.5" stroke-linecap="round"/><circle cx="9" cy="14" r=".8" fill="currentColor"/><circle cx="15" cy="14" r=".8" fill="currentColor"/><path d="M9 20l2-3M15 20l-2-3" stroke-width="1.5" stroke-linecap="round"/></svg>`,
         energy: `<svg viewBox="0 0 24 24" fill="none"><path d="M13 2L5 13h6l-1 9 9-13h-6l1-7z" stroke-width="1.5" stroke-linejoin="round"/></svg>`
       };
-
       return icons[type] || icons.life;
     }
+
     function renderCategory(type, title, score, text) {
-      return `
-        <article class="category-card">
-          <div class="category-top">
-            <div class="category-title">
-              <div class="signal-picto" aria-hidden="true">${getCategoryIcon(type)}</div>
-              <div>${title}</div>
-            </div>
-            <div class="category-score">${score}</div>
-          </div>
-          <div class="category-text">${text}</div>
-        </article>
-      `;
+      return `<article class="category-card">
+        <div class="category-top">
+          <div class="category-title"><div class="signal-picto" aria-hidden="true">${getCategoryIcon(type)}</div><div>${escapeHtml(title)}</div></div>
+          <div class="category-score">${escapeHtml(score)}</div>
+        </div>
+        <div class="category-text">${escapeHtml(limitText(text, 135))}</div>
+      </article>`;
     }
 
-    form.addEventListener("submit", function(e) {
+    async function analyzePlace(value) {
+      const response = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: value, mode })
+      });
+
+      const text = await response.text();
+      let payload;
+      try { payload = JSON.parse(text); }
+      catch { throw new Error("Réponse API invalide"); }
+
+      if (!response.ok) throw new Error(payload.error || "Erreur pendant l’analyse");
+      return payload;
+    }
+
+    function renderApiResult(query, payload) {
+      const score = clampScore(payload.score ?? 50);
+      const visual = getScoreVisual(score);
+      const categories = payload.categories || {};
+      const signals = payload.signals || {};
+      const questions = Array.isArray(payload.questions) ? payload.questions : [];
+
+      resultView.innerHTML = `
+        <div class="record-wrap">
+          <div class="crumbs"><span>Accueil</span><span>/</span><span>Analyse</span><span>/</span><span>${escapeHtml(query)}</span></div>
+
+          <section class="record-hero">
+            <div>
+              <div class="eyebrow">Analyse immobilière</div>
+              <h1>${score}/100</h1>
+              <div class="input-type">${escapeHtml(payload.inputType || "Analyse")} · ${escapeHtml(payload.confidence || "Indicative")}</div>
+              <div class="hero-sub">${escapeHtml(limitText(payload.verdict || visual.label, 60))}</div>
+              <div class="record-subline">${escapeHtml(limitText(payload.subtitle || "", 145))}</div>
+              <div class="verdict-line">
+                <div class="verdict-item"><strong>Lecture rapide</strong>${escapeHtml(limitText(payload.fastRead || "", 115))}</div>
+                <div class="verdict-item"><strong>À vérifier</strong>${escapeHtml(limitText(payload.checkRead || "", 120))}</div>
+              </div>
+            </div>
+
+            <aside class="score-card ${visual.tone}">
+              <div>
+                <div class="score-label">PlaceCheck Index</div>
+                <div class="score-pill ${visual.tone}">${escapeHtml(payload.verdict || visual.label)}</div>
+                <div class="score-visual">
+                  <div class="score-face">${renderFace(visual.face, visual.color)}</div>
+                  <div>
+                    <div class="score-status">${escapeHtml(payload.verdict || visual.label)}</div>
+                    <div class="score-number">${score}<span class="score-denom">/100</span></div>
+                  </div>
+                </div>
+                <div class="score-brief">${escapeHtml(limitText(payload.summary || "", 130))}</div>
+              </div>
+            </aside>
+          </section>
+
+          <main class="record-main">
+            <section>
+              <h2>Catégories</h2>
+              <div class="category-grid">
+                ${renderCategory("life", "Qualité de vie", clampScore(categories.life ?? 50) + "/100", categories.lifeText || "")}
+                ${renderCategory("price", "Prix & valeur", clampScore(categories.price ?? 50) + "/100", categories.priceText || "")}
+                ${renderCategory("safety", "Sécurité & nuisances", clampScore(categories.safety ?? 50) + "/100", categories.safetyText || "")}
+                ${renderCategory("access", "Accessibilité", clampScore(categories.access ?? 50) + "/100", categories.accessText || "")}
+                ${renderCategory("energy", "Énergie / logement", clampScore(categories.energy ?? 50) + "/100", categories.energyText || "")}
+              </div>
+            </section>
+
+            <section>
+              <h2>Signaux</h2>
+              <div class="signal-columns">
+                <div class="signal-box"><h3>Signaux positifs</h3><ul class="mini-list">${(signals.positive || []).map(item => `<li>${escapeHtml(limitText(item, 90))}</li>`).join("")}</ul></div>
+                <div class="signal-box"><h3>Points à vérifier</h3><ul class="mini-list">${(signals.negative || []).map(item => `<li>${escapeHtml(limitText(item, 90))}</li>`).join("")}</ul></div>
+              </div>
+            </section>
+
+            <section>
+              <h2>Questions avant décision</h2>
+              <div class="summary-card"><div class="question-grid">
+                ${questions.map((q, i) => `<div class="question-row"><div class="question-number">${String(i + 1).padStart(2, "0")}</div><div>${escapeHtml(limitText(q, 110))}</div></div>`).join("")}
+              </div></div>
+            </section>
+
+            <section>
+              <h2>Sources</h2>
+              <div class="source-list">
+                ${(payload.sources || []).map(source => `
+                  <div class="source-row">
+                    <div class="source-domain">${escapeHtml(source.domain || "Source")}</div>
+                    <div class="source-title">${source.url ? `<a href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(source.title || source.url)}</a>` : escapeHtml(source.title || "")}</div>
+                  </div>
+                `).join("")}
+              </div>
+            </section>
+          </main>
+        </div>
+      `;
+
+      showOnly("result");
+    }
+
+    form.addEventListener("submit", async function(e) {
       e.preventDefault();
       const value = input.value.trim();
       if (!value) return;
 
+      errorBox.classList.add("hidden");
+      errorBox.textContent = "";
       loader.classList.remove("hidden");
       button.disabled = true;
       button.textContent = "Analyse";
       startLoadingMessages();
 
-      setTimeout(() => {
+      try {
+        const payload = await analyzePlace(value);
+        window.location.hash = "#/result";
+        renderApiResult(value, payload);
+      } catch (err) {
+        errorBox.textContent = err.message || "Impossible d’analyser cette adresse.";
+        errorBox.classList.remove("hidden");
+      } finally {
         stopLoadingMessages();
         loader.classList.add("hidden");
         button.disabled = false;
         button.textContent = "Analyser";
-        window.location.hash = "#/result";
-        /* removed legacy renderResult */
-      }, 800);
+      }
     });
+
     function route() {
       const hash = window.location.hash || "#/";
       if (hash === "#/about") {
         showOnly("about");
-      } else if (hash === "#/result") {
-      if (resultView.innerHTML.trim()) {
+      } else if (hash === "#/result" && resultView.innerHTML.trim()) {
         showOnly("result");
       } else {
         showOnly("home");
       }
-    } else {
-        showOnly("home");
-      }
     }
 
-    const logoHome = document.getElementById("go-home");
-    if (logoHome) {
-      logoHome.addEventListener("click", function () {
-        window.location.hash = "#/";
-        showOnly("home");
-        input.value = "";
-      });
-    }
+    document.getElementById("go-home").addEventListener("click", function() {
+      window.location.hash = "#/";
+      input.value = "";
+      resultView.innerHTML = "";
+      showOnly("home");
+    });
 
     window.addEventListener("hashchange", route);
     route();

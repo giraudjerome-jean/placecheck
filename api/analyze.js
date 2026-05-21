@@ -20,33 +20,24 @@ Tu es PlaceCheck, un outil français de lecture immobilière.
 Analyse : "${query}"
 Mode : "${mode || "auto"}"
 
-Objectif : produire une lecture utile, sobre et nuancée d'une adresse ou d'une annonce immobilière.
-
 Sources à chercher quand c'est possible :
 1. DVF / data.gouv / Etalab pour les prix de vente réels.
 2. Données DPE si accessibles.
 3. Transports, commerces, services, contexte urbain.
 4. Risques, nuisances, bruit, pollution si accessible.
 5. Si c'est une annonce, lire l'annonce seulement si elle est publiquement accessible.
-6. Pour une annonce, le DPE est prioritaire : cherche explicitement la lettre DPE (A, B, C, D, E, F ou G) dans la page ou dans le texte fourni.
+6. Pour une annonce, le DPE est prioritaire : cherche explicitement la lettre DPE (A, B, C, D, E, F ou G).
 
 Règles impératives :
-- Ne mets JAMAIS d'URL dans les champs texte.
-- Les URL vont uniquement dans le tableau "sources".
-- Ne cite pas de site entre parenthèses dans les textes.
-- Tous les scores doivent être sur 100, jamais sur 10.
-- Si tu hésites entre 7/10 et 70/100, tu dois écrire 70.
-- Pas de carte, pas de comparable détaillé.
-- Ne prétends pas avoir utilisé DVF si tu ne l'as pas réellement trouvé.
-- Si la donnée est absente, dis "à vérifier", sans inventer.
-- Ne mentionne jamais des nuisances sonores, de l’insécurité ou du bruit si tu n’as pas trouvé d’information sourcée ou si l’utilisateur ne l’a pas indiqué.
-- Si tu n’as pas d’information sur les nuisances, écris plutôt : "Aucun signal spécifique retenu ; à confirmer par une visite." 
-- Style français, sobre, éditorial, phrases très courtes.
-- Évite absolument les répétitions : chaque champ doit apporter une information différente.
-- "verdict", "subtitle", "summary", "fastRead" et "checkRead" ne doivent pas répéter la même idée.
-- "checkRead" doit contenir 3 points maximum, séparés par des virgules, pas un paragraphe.
-- Si une donnée est absente, écris simplement "Donnée à vérifier", pas une longue explication.
-- Réponds uniquement avec un JSON valide, sans markdown.
+- Ne mets jamais d'URL dans les champs texte. Les URL vont uniquement dans "sources".
+- Tous les scores doivent être sur 100.
+- Si l’utilisateur donne seulement une adresse, tu n’as pas le droit de juger le prix du bien, puisqu’aucun prix n’a été fourni.
+- Pour une adresse seule, "Prix & valeur" parle seulement du contexte de marché local, jamais de "prix cohérent", "opportunité", "surcoté", "prix demandé" ou "état réel du bien".
+- Pour une adresse seule, ne parle pas de bruit, circulation, nuisances ou animation nocturne si tu n’as pas une source claire.
+- Pour "Qualité de vie", donne des points précis du quartier : rues voisines, commerces, tram, jardin, équipements, services, si disponibles.
+- Si une donnée est absente, dis "à vérifier", sans inventer.
+- Phrases courtes. Pas de répétitions entre les champs.
+- Réponds uniquement en JSON valide.
 
 Structure JSON exacte :
 {
@@ -54,28 +45,27 @@ Structure JSON exacte :
   "confidence": "Analyse sourcée" ou "Lecture annonce" ou "Analyse indicative" ou "Adresse partielle",
   "score": nombre entre 0 et 100,
   "verdict": "3 à 5 mots maximum",
-  "subtitle": "1 phrase courte, différente du verdict, sans URL",
-  "summary": "1 phrase courte, différente du subtitle, sans URL",
-  "fastRead": "1 phrase courte sur le potentiel, sans URL",
-  "checkRead": "3 points maximum à vérifier, séparés par des virgules, sans URL",
+  "subtitle": "1 phrase courte",
+  "summary": "1 phrase courte différente",
+  "fastRead": "1 phrase courte sur le potentiel",
+  "checkRead": "3 points maximum à vérifier, séparés par des virgules",
   "categories": {
     "life": nombre entre 0 et 100,
-    "lifeText": "phrase courte, sans URL, avec 2 à 4 points précis du quartier si disponibles",
+    "lifeText": "phrase courte avec 2 à 4 points précis du quartier si disponibles",
     "price": nombre entre 0 et 100,
-    "priceText": "phrase courte, sans URL. Si simple adresse sans prix : contexte de marché uniquement, aucun jugement sur le prix du bien",
+    "priceText": "phrase courte. Si adresse seule : contexte de marché uniquement",
     "safety": nombre entre 0 et 100,
-    "safetyText": "phrase courte, sans URL. Ne jamais inventer de bruit ou nuisance",
+    "safetyText": "phrase courte. Ne jamais inventer de bruit ou nuisance",
     "access": nombre entre 0 et 100,
-    "accessText": "phrase courte, sans URL",
+    "accessText": "phrase courte",
     "energy": nombre entre 0 et 100,
-    "energyText": "phrase courte, sans URL. Pour une annonce, mentionne explicitement le DPE lu ou indique qu’il n’a pas été lu"
+    "energyText": "phrase courte. Pour une annonce, mentionner le DPE lu ou indiquer qu'il n'a pas été lu"
   },
   "signals": {
-    "positive": ["4 signaux maximum, courts, sans URL"],
-    "negative": ["4 points maximum, courts, sans URL. Ne pas inventer bruit/nuisance/sécurité"]
+    "positive": ["4 signaux maximum"],
+    "negative": ["4 points maximum"]
   },
-  "placecheckTake": "2 phrases maximum, sans URL",
-  "questions": ["4 questions courtes, sans URL"],
+  "questions": ["4 questions courtes"],
   "sources": [
     {"domain":"Nom du site ou source","title":"Titre court","url":"URL si disponible"}
   ]
@@ -97,9 +87,7 @@ Structure JSON exacte :
     const data = await response.json();
 
     if (!response.ok) {
-      return res.status(500).json({
-        error: data.error?.message || "Erreur OpenAI"
-      });
+      return res.status(500).json({ error: data.error?.message || "Erreur OpenAI" });
     }
 
     const text =
@@ -116,9 +104,7 @@ Structure JSON exacte :
       parsed = match ? JSON.parse(match[0]) : null;
     }
 
-    if (!parsed) {
-      return res.status(500).json({ error: "Analyse invalide" });
-    }
+    if (!parsed) return res.status(500).json({ error: "Analyse invalide" });
 
     const clamp = (v) => {
       let n = Number(v ?? 50);
@@ -132,7 +118,6 @@ Structure JSON exacte :
       .replace(/https?:\/\/\S+/g, "")
       .replace(/\s+/g, " ")
       .trim();
-
 
     const limit = (v, max = 180) => {
       const t = clean(v);
@@ -149,13 +134,11 @@ Structure JSON exacte :
       });
     };
 
-
     parsed.score = clamp(parsed.score);
     parsed.subtitle = limit(parsed.subtitle, 140);
     parsed.summary = limit(parsed.summary, 130);
     parsed.fastRead = limit(parsed.fastRead, 110);
     parsed.checkRead = limit(parsed.checkRead, 120);
-    parsed.placecheckTake = limit(parsed.placecheckTake, 240);
 
     parsed.categories = parsed.categories || {};
     for (const key of ["life", "price", "safety", "access", "energy"]) {
@@ -164,25 +147,14 @@ Structure JSON exacte :
     }
 
     parsed.signals = parsed.signals || {};
-    parsed.signals.positive = Array.isArray(parsed.signals.positive)
-      ? uniqueList(parsed.signals.positive).slice(0, 4).map(item => limit(item, 90))
-      : [];
-    parsed.signals.negative = Array.isArray(parsed.signals.negative)
-      ? uniqueList(parsed.signals.negative).slice(0, 4).map(item => limit(item, 90))
-      : [];
-
-    parsed.questions = Array.isArray(parsed.questions)
-      ? uniqueList(parsed.questions).slice(0, 4).map(item => limit(item, 110))
-      : [];
-
-    parsed.sources = Array.isArray(parsed.sources)
-      ? parsed.sources.slice(0, 5).map(s => ({
-          domain: clean(s.domain),
-          title: clean(s.title),
-          url: String(s.url || "").trim()
-        }))
-      : [];
-
+    parsed.signals.positive = Array.isArray(parsed.signals.positive) ? uniqueList(parsed.signals.positive).slice(0, 4).map(item => limit(item, 90)) : [];
+    parsed.signals.negative = Array.isArray(parsed.signals.negative) ? uniqueList(parsed.signals.negative).slice(0, 4).map(item => limit(item, 90)) : [];
+    parsed.questions = Array.isArray(parsed.questions) ? uniqueList(parsed.questions).slice(0, 4).map(item => limit(item, 110)) : [];
+    parsed.sources = Array.isArray(parsed.sources) ? parsed.sources.slice(0, 5).map(s => ({
+      domain: clean(s.domain),
+      title: clean(s.title),
+      url: String(s.url || "").trim()
+    })) : [];
 
     const inputText = String(query || "").toLowerCase();
     const looksLikeListing =
@@ -193,67 +165,13 @@ Structure JSON exacte :
       /\b\d+\s?€|\beuros?\b|\bprix\b/i.test(inputText);
 
     if (!looksLikeListing) {
-      parsed.categories.priceText = parsed.categories.priceText
-        .replace(/prix (est|semble|reste|demandé|globalement)[^.]*\./gi, "")
-        .replace(/à regarder selon l’état réel du bien\.?/gi, "")
-        .replace(/(cohérent|surcoté|sous-coté|opportunité|bonne affaire|trop cher|cher pour le secteur|prix demandé|état réel du bien)/gi, "marché local")
-        .trim();
-
-      if (!parsed.categories.priceText || parsed.categories.priceText.length < 20) {
-        parsed.categories.priceText = "Contexte de marché à documenter avec DVF et les transactions récentes du secteur.";
-      }
-
-      parsed.checkRead = parsed.checkRead
-        .replace(/prix final[^,.;]*/gi, "prix si annonce disponible")
-        .replace(/prix demandé[^,.;]*/gi, "prix si annonce disponible")
-        .replace(/bruit[^,.;]*/gi, "")
-        .replace(/nuisances?[^,.;]*/gi, "")
-        .replace(/circulation[^,.;]*/gi, "")
-        .replace(/\s+,/g, ",")
-        .replace(/^,\s*/, "")
-        .trim();
-
-      parsed.categories.safetyText = "Aucun signal spécifique retenu ; à confirmer par une visite.";
-    }
-
-
-    const dpeMatch = inputText.match(/\bdpe\s*[:\-]?\s*([abcdefg])\b/i);
-    if (looksLikeListing && dpeMatch) {
-      const dpe = dpeMatch[1].toUpperCase();
-      const dpeScores = { A: 92, B: 82, C: 70, D: 58, E: 42, F: 25, G: 12 };
-      parsed.categories.energy = dpeScores[dpe] || parsed.categories.energy;
-      parsed.categories.energyText = `DPE ${dpe} indiqué dans l’annonce ; impact à intégrer dans les charges, le confort et la négociation.`;
-      parsed.signals.negative = parsed.signals.negative.filter(item => !/dpe non lu|performance énergétique/i.test(item));
-      if (["F", "G"].includes(dpe)) {
-        parsed.signals.negative.unshift(`DPE ${dpe} : point énergétique prioritaire.`);
-      }
-    } else if (looksLikeListing) {
-      parsed.categories.energy = Math.min(parsed.categories.energy, 50);
-      if (!/dpe/i.test(parsed.categories.energyText)) {
-        parsed.categories.energyText = "DPE non lu : collez le texte de l’annonce pour l’analyser.";
-      }
-    }
-
-
-    const nuisanceWords = /(bruit|nuisance|sonore|insécurité|sécurité faible|circulation bruyante)/i;
-    const hasNuisanceSource = parsed.sources.some(s => nuisanceWords.test(`${s.domain} ${s.title}`));
-    const userMentionsNuisance = nuisanceWords.test(inputText);
-
-    if (!hasNuisanceSource && !userMentionsNuisance) {
-      parsed.categories.safetyText = "Aucun signal spécifique retenu ; à confirmer par une visite.";
-      parsed.signals.negative = parsed.signals.negative.filter(item => !nuisanceWords.test(item));
-    }
-
-
-
-    if (!looksLikeListing) {
-      const forbiddenPrice = /(prix globalement cohérent|opportunité évidente|état réel du bien|prix final|prix demandé)/i;
-      if (forbiddenPrice.test(parsed.categories.priceText)) {
+      const forbiddenPrice = /(prix globalement cohérent|opportunité évidente|état réel du bien|prix final|prix demandé|bonne affaire|surcoté|trop cher)/i;
+      if (forbiddenPrice.test(parsed.categories.priceText || "")) {
         parsed.categories.priceText = "Marché local à documenter avec DVF ; aucun prix de bien n’a été fourni.";
       }
 
       const forbiddenNuisance = /(bruit|circulation|animation selon les horaires|nuisances sonores)/i;
-      if (forbiddenNuisance.test(parsed.categories.safetyText)) {
+      if (forbiddenNuisance.test(parsed.categories.safetyText || "")) {
         parsed.categories.safetyText = "Aucun signal spécifique retenu ; calme et environnement à confirmer par une visite.";
       }
 
@@ -269,6 +187,17 @@ Structure JSON exacte :
       if (!parsed.checkRead || parsed.checkRead.length < 10) {
         parsed.checkRead = "DPE, état de l’immeuble, charges, luminosité.";
       }
+    }
+
+    const dpeMatch = inputText.match(/\bdpe\s*[:\-]?\s*([abcdefg])\b/i);
+    if (looksLikeListing && dpeMatch) {
+      const dpe = dpeMatch[1].toUpperCase();
+      const dpeScores = { A: 92, B: 82, C: 70, D: 58, E: 42, F: 25, G: 12 };
+      parsed.categories.energy = dpeScores[dpe] || parsed.categories.energy;
+      parsed.categories.energyText = `DPE ${dpe} indiqué dans l’annonce ; impact à intégrer dans les charges, le confort et la négociation.`;
+    } else if (looksLikeListing && !/dpe/i.test(parsed.categories.energyText || "")) {
+      parsed.categories.energy = Math.min(parsed.categories.energy, 50);
+      parsed.categories.energyText = "DPE non lu : collez le texte de l’annonce pour l’analyser.";
     }
 
     return res.status(200).json(parsed);
