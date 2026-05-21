@@ -40,7 +40,7 @@ Règles impératives :
 - Ne prétends pas avoir utilisé DVF si tu ne l'as pas réellement trouvé.
 - Si la donnée est absente, dis "à vérifier", sans inventer.
 - Ne mentionne jamais des nuisances sonores, de l’insécurité ou du bruit si tu n’as pas trouvé d’information sourcée ou si l’utilisateur ne l’a pas indiqué.
-- Si tu n’as pas d’information sur les nuisances, écris plutôt : "Rue et nuisances à confirmer sur place." 
+- Si tu n’as pas d’information sur les nuisances, écris plutôt : "Aucun signal spécifique retenu ; à confirmer par une visite." 
 - Style français, sobre, éditorial, phrases très courtes.
 - Évite absolument les répétitions : chaque champ doit apporter une information différente.
 - "verdict", "subtitle", "summary", "fastRead" et "checkRead" ne doivent pas répéter la même idée.
@@ -60,9 +60,9 @@ Structure JSON exacte :
   "checkRead": "3 points maximum à vérifier, séparés par des virgules, sans URL",
   "categories": {
     "life": nombre entre 0 et 100,
-    "lifeText": "phrase courte, sans URL",
+    "lifeText": "phrase courte, sans URL, avec 2 à 4 points précis du quartier si disponibles",
     "price": nombre entre 0 et 100,
-    "priceText": "phrase courte, sans URL. Si simple adresse sans prix : contexte de marché uniquement, pas de jugement sur un prix",
+    "priceText": "phrase courte, sans URL. Si simple adresse sans prix : contexte de marché uniquement, aucun jugement sur le prix du bien",
     "safety": nombre entre 0 et 100,
     "safetyText": "phrase courte, sans URL. Ne jamais inventer de bruit ou nuisance",
     "access": nombre entre 0 et 100,
@@ -194,8 +194,9 @@ Structure JSON exacte :
 
     if (!looksLikeListing) {
       parsed.categories.priceText = parsed.categories.priceText
-        .replace(/prix (est|semble|reste|demandé)[^.]*\./gi, "")
-        .replace(/(cohérent|surcoté|sous-coté|opportunité|bonne affaire|trop cher|cher pour le secteur)/gi, "à étudier")
+        .replace(/prix (est|semble|reste|demandé|globalement)[^.]*\./gi, "")
+        .replace(/à regarder selon l’état réel du bien\.?/gi, "")
+        .replace(/(cohérent|surcoté|sous-coté|opportunité|bonne affaire|trop cher|cher pour le secteur|prix demandé|état réel du bien)/gi, "marché local")
         .trim();
 
       if (!parsed.categories.priceText || parsed.categories.priceText.length < 20) {
@@ -204,7 +205,15 @@ Structure JSON exacte :
 
       parsed.checkRead = parsed.checkRead
         .replace(/prix final[^,.;]*/gi, "prix si annonce disponible")
-        .replace(/prix demandé[^,.;]*/gi, "prix si annonce disponible");
+        .replace(/prix demandé[^,.;]*/gi, "prix si annonce disponible")
+        .replace(/bruit[^,.;]*/gi, "")
+        .replace(/nuisances?[^,.;]*/gi, "")
+        .replace(/circulation[^,.;]*/gi, "")
+        .replace(/\s+,/g, ",")
+        .replace(/^,\s*/, "")
+        .trim();
+
+      parsed.categories.safetyText = "Aucun signal spécifique retenu ; à confirmer par une visite.";
     }
 
 
@@ -231,7 +240,7 @@ Structure JSON exacte :
     const userMentionsNuisance = nuisanceWords.test(inputText);
 
     if (!hasNuisanceSource && !userMentionsNuisance) {
-      parsed.categories.safetyText = "Rue et nuisances à confirmer sur place ; aucun signal spécifique retenu.";
+      parsed.categories.safetyText = "Aucun signal spécifique retenu ; à confirmer par une visite.";
       parsed.signals.negative = parsed.signals.negative.filter(item => !nuisanceWords.test(item));
     }
 
