@@ -1122,8 +1122,12 @@
       if (hash === "#/about") {
         showOnly("about");
       } else if (hash === "#/result") {
-        renderResult(input.value.trim() || "Adresse test");
+      if (resultView.innerHTML.trim()) {
+        showOnly("result");
       } else {
+        showOnly("home");
+      }
+    } else {
         showOnly("home");
       }
     }
