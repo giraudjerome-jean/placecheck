@@ -245,6 +245,32 @@ Structure JSON exacte :
     }
 
 
+
+    if (!looksLikeListing) {
+      const forbiddenPrice = /(prix globalement cohérent|opportunité évidente|état réel du bien|prix final|prix demandé)/i;
+      if (forbiddenPrice.test(parsed.categories.priceText)) {
+        parsed.categories.priceText = "Marché local à documenter avec DVF ; aucun prix de bien n’a été fourni.";
+      }
+
+      const forbiddenNuisance = /(bruit|circulation|animation selon les horaires|nuisances sonores)/i;
+      if (forbiddenNuisance.test(parsed.categories.safetyText)) {
+        parsed.categories.safetyText = "Aucun signal spécifique retenu ; calme et environnement à confirmer par une visite.";
+      }
+
+      parsed.signals.negative = parsed.signals.negative.filter(item => !forbiddenNuisance.test(item));
+      parsed.checkRead = parsed.checkRead
+        .replace(/Bruit réel,?\s*/gi, "")
+        .replace(/nuisances?[^,.;]*/gi, "")
+        .replace(/prix final[^,.;]*/gi, "")
+        .replace(/prix demandé[^,.;]*/gi, "")
+        .replace(/^,\s*/, "")
+        .trim();
+
+      if (!parsed.checkRead || parsed.checkRead.length < 10) {
+        parsed.checkRead = "DPE, état de l’immeuble, charges, luminosité.";
+      }
+    }
+
     return res.status(200).json(parsed);
   } catch (error) {
     return res.status(500).json({ error: error.message || "Erreur serveur" });
