@@ -408,24 +408,20 @@
               <div class="input-type">${escapeHtml(payload.inputType || "Analyse")} · ${escapeHtml(payload.confidence || "Indicative")}</div>
               <div class="hero-sub">${escapeHtml(limitText(payload.verdict || visual.label, 60))}</div>
               <div class="record-subline">${escapeHtml(limitText(payload.subtitle || "", 145))}</div>
-              <div class="verdict-line">
-                <div class="verdict-item"><strong>Lecture rapide</strong>${escapeHtml(limitText(payload.fastRead || "", 115))}</div>
-                <div class="verdict-item"><strong>À vérifier</strong>${escapeHtml(limitText(payload.checkRead || "", 120))}</div>
-              </div>
             </div>
 
             <aside class="score-card ${visual.tone}">
               <div>
                 <div class="score-label">PlaceCheck Index</div>
-                <div class="score-pill ${visual.tone}">${escapeHtml(payload.verdict || visual.label)}</div>
+                <div class="score-pill ${visual.tone}">${escapeHtml(visual.label)}</div>
                 <div class="score-visual">
                   <div class="score-face">${renderFace(visual.face, visual.color)}</div>
                   <div>
-                    <div class="score-status">${escapeHtml(payload.verdict || visual.label)}</div>
+                    <div class="score-status">${escapeHtml(visual.label)}</div>
                     <div class="score-number">${score}<span class="score-denom">/100</span></div>
                   </div>
                 </div>
-                <div class="score-brief">${escapeHtml(limitText(payload.summary || "", 130))}</div>
+                <div class="score-brief">${escapeHtml(payload.confidence || "Analyse indicative")}</div>
               </div>
             </aside>
           </section>

@@ -22,10 +22,10 @@ Mode : "${mode || "auto"}"
 
 Sources à chercher quand c'est possible :
 1. DVF / data.gouv / Etalab pour les prix de vente réels.
-2. Prix de location au m² : SeLoger, MeilleursAgents, Observatoires locaux, agences ou données ouvertes si disponibles.
+2. Prix de location au m² : SeLoger, MeilleursAgents, observatoires locaux, agences ou données ouvertes si disponibles.
 3. DPE si l’entrée est une annonce ou si des données énergie fiables sont accessibles.
 4. Qualité de vie : commerces, rues proches, marchés, jardins, équipements, écoles, services, ambiance de quartier.
-5. Accessibilité : tram, métro, bus, gares, stations précises et temps/piéton si disponible.
+5. Accessibilité : tram, métro, bus, gares, stations précises et temps piéton si disponible.
 6. Sécurité / nuisances / risques : Ville Idéale, Bien dans ma ville, Interstats / ministère de l’Intérieur, GeoRisques, données officielles ou avis habitants.
 7. Si c'est une annonce, lire l'annonce seulement si elle est publiquement accessible.
 8. Pour une annonce, le DPE est prioritaire : cherche explicitement la lettre DPE (A, B, C, D, E, F ou G).
@@ -35,7 +35,7 @@ Règles impératives :
 - Tous les scores doivent être sur 100.
 - Si l’utilisateur donne seulement une adresse, tu n’as pas le droit de juger le prix du bien, puisqu’aucun prix n’a été fourni.
 - Pour une adresse seule, "Prix & valeur" doit afficher si possible un prix moyen au m² à l’achat et un prix locatif au m².
-- Si tu ne trouves pas de prix fiables, écris : "Prix au m² à documenter avec DVF et loyers de marché."
+- Pour "Prix & valeur", tu dois chercher activement et afficher des ordres de grandeur chiffrés : prix d’achat €/m² et loyer €/m²/mois. Si aucun chiffre fiable n’est trouvé, écris : "Prix achat et loyer non trouvés dans les sources consultées."
 - N’écris jamais "prix modérés", "prix cohérent", "bonne affaire" ou "opportunité" sans prix fourni par l’utilisateur.
 - Pour "Sécurité & nuisances", ne parle jamais de criminalité faible, de quartier sûr, de bruit ou de nuisances si tu n’as pas une source claire.
 - Si aucune source claire n’est trouvée sur sécurité/nuisances, écris exactement : "Aucun signal particulier identifié."
@@ -44,7 +44,7 @@ Règles impératives :
 - Pour "Accessibilité", tu dois citer des éléments précis : tram, arrêt, bus, gare, distance approximative si disponible.
 - Exemple pour Bordeaux : tram D, arrêt Fondaudège-Muséum ou Croix de Seguey si pertinent.
 - Si une donnée est absente, dis "à vérifier", sans inventer.
-- Phrases courtes. Pas de répétitions entre les champs.
+- Phrases courtes. Pas de répétitions entre les champs. Le "verdict", "subtitle" et "summary" doivent être différents. Ne répète jamais exactement le même intitulé.
 - Réponds uniquement en JSON valide.
 
 Structure JSON exacte :
@@ -61,7 +61,7 @@ Structure JSON exacte :
     "life": nombre entre 0 et 100,
     "lifeText": "phrase courte avec 2 à 4 agréments précis du quartier",
     "price": nombre entre 0 et 100,
-    "priceText": "prix au m² achat et location si trouvés ; sinon dire que c’est à documenter",
+    "priceText": "prix d’achat €/m² + loyer €/m²/mois si trouvés ; sinon indiquer clairement que les prix n’ont pas été trouvés",
     "safety": nombre entre 0 et 100,
     "safetyText": "si pas de source claire : Aucun signal particulier identifié.",
     "access": nombre entre 0 et 100,
@@ -77,7 +77,7 @@ Structure JSON exacte :
   "sources": [
     {"domain":"Nom du site ou source","title":"Titre court","url":"URL si disponible"}
   ]
-}`
+}`;
 
     const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
@@ -173,50 +173,18 @@ Structure JSON exacte :
       /\b\d+\s?€|\beuros?\b|\bprix\b/i.test(inputText);
 
     if (!looksLikeListing) {
-      const forbiddenPrice = /(prix globalement cohérent|opportunité évidente|état réel du bien|prix final|prix demandé|bonne affaire|surcoté|trop cher)/i;
-      if (forbiddenPrice.test(parsed.categories.priceText || "")) {
-        parsed.categories.priceText = "Marché local à documenter avec DVF ; aucun prix de bien n’a été fourni.";
-      }
-
-      const forbiddenNuisance = /(bruit|circulation|animation selon les horaires|nuisances sonores)/i;
-      if (forbiddenNuisance.test(parsed.categories.safetyText || "")) {
-        parsed.categories.safetyText = "Aucun signal spécifique retenu ; calme et environnement à confirmer par une visite.";
-      }
-
-      parsed.signals.negative = parsed.signals.negative.filter(item => !forbiddenNuisance.test(item));
-      parsed.checkRead = parsed.checkRead
-        .replace(/Bruit réel,?\s*/gi, "")
-        .replace(/nuisances?[^,.;]*/gi, "")
-        .replace(/prix final[^,.;]*/gi, "")
-        .replace(/prix demandé[^,.;]*/gi, "")
-        .replace(/^,\s*/, "")
-        .trim();
-
-      if (!parsed.checkRead || parsed.checkRead.length < 10) {
-        parsed.checkRead = "DPE, état de l’immeuble, charges, luminosité.";
-      }
-    }
-
-
-    // PlaceCheck guardrails v13
-    const safetyUnknown = "Aucun signal particulier identifié.";
-    const inputIsBordeauxFondaudege =
-      /fourcand|fondaud[eè]ge|jardin public|croix de seguey|mus[eé]um/i.test(inputText) &&
-      /bordeaux|33000/i.test(inputText);
-
-    if (!looksLikeListing) {
       const forbiddenPrice = /(prix globalement cohérent|opportunité évidente|état réel du bien|prix final|prix demandé|bonne affaire|surcoté|trop cher|prix modérés|prix modéré)/i;
       if (forbiddenPrice.test(parsed.categories.priceText || "")) {
-        parsed.categories.priceText = "Prix au m² à documenter avec DVF et loyers de marché.";
+        parsed.categories.priceText = "Prix achat et loyer non trouvés dans les sources consultées.";
       }
 
-      if (!/(m²|m2|€)/i.test(parsed.categories.priceText || "") && !/documenter/i.test(parsed.categories.priceText || "")) {
-        parsed.categories.priceText = "Prix au m² à documenter avec DVF et loyers de marché.";
+      if (!/(m²|m2|€)/i.test(parsed.categories.priceText || "") && !/(non trouvés|non trouves|€|m²|m2)/i.test(parsed.categories.priceText || "")) {
+        parsed.categories.priceText = "Prix achat et loyer non trouvés dans les sources consultées.";
       }
 
       const forbiddenNuisance = /(faible taux de criminalité|criminalité faible|quartier sûr|bruit|circulation|animation selon les horaires|nuisances sonores)/i;
       if (forbiddenNuisance.test(parsed.categories.safetyText || "")) {
-        parsed.categories.safetyText = safetyUnknown;
+        parsed.categories.safetyText = "Aucun signal particulier identifié.";
       }
 
       parsed.signals.negative = parsed.signals.negative.filter(item => !forbiddenNuisance.test(item));
@@ -234,8 +202,12 @@ Structure JSON exacte :
     }
 
     if (!parsed.categories.safetyText || /(donnée à vérifier|à vérifier)$/i.test(parsed.categories.safetyText)) {
-      parsed.categories.safetyText = safetyUnknown;
+      parsed.categories.safetyText = "Aucun signal particulier identifié.";
     }
+
+    const inputIsBordeauxFondaudege =
+      /fourcand|fondaud[eè]ge|jardin public|croix de seguey|mus[eé]um/i.test(inputText) &&
+      /bordeaux|33000/i.test(inputText);
 
     if (inputIsBordeauxFondaudege) {
       if (!/fondaud|jardin public|mus[eé]um|croix de seguey|tram d/i.test(parsed.categories.lifeText || "")) {
@@ -243,6 +215,14 @@ Structure JSON exacte :
       }
       if (!/tram|fondaud|mus[eé]um|croix de seguey/i.test(parsed.categories.accessText || "")) {
         parsed.categories.accessText = "Tram D à proximité, notamment Fondaudège-Muséum ou Croix de Seguey selon l’adresse exacte.";
+      }
+    }
+
+
+    if (!looksLikeListing) {
+      const noPriceNumbers = !/(\d[\d\s.,]*\s*€|\d[\d\s.,]*\s*\/\s*m²|\d[\d\s.,]*\s*\/\s*m2)/i.test(parsed.categories.priceText || "");
+      if (noPriceNumbers) {
+        parsed.categories.price = Math.min(parsed.categories.price, 50);
       }
     }
 
