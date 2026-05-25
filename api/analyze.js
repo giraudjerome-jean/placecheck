@@ -64,24 +64,20 @@ Mode : "${mode || "auto"}"
 
 ${dvfText}
 
-Sources à chercher quand c'est possible :
-1. DVF / data.gouv / Etalab pour les prix de vente réels.
-2. Prix de location au m² : SeLoger, MeilleursAgents, Observatoires locaux, agences ou données ouvertes si disponibles.
-3. DPE si l’entrée est une annonce ou si des données énergie fiables sont accessibles.
-4. Qualité de vie : commerces, rues proches, marchés, jardins, équipements, écoles, services, ambiance de quartier.
-5. Accessibilité : tram, métro, bus, gares, stations précises et temps/piéton si disponible.
-6. Sécurité / nuisances / risques : Ville Idéale, Bien dans ma ville, Interstats / ministère de l’Intérieur, GeoRisques, données officielles ou avis habitants.
-7. Si c'est une annonce, lire l'annonce seulement si elle est publiquement accessible.
-8. Pour une annonce, le DPE est prioritaire : cherche explicitement la lettre DPE (A, B, C, D, E, F ou G).
+Données autorisées :
+1. Pour le prix, utiliser uniquement le bloc DVF réel fourni ci-dessus.
+2. Ne jamais utiliser MeilleursAgents, SeLoger, Efficity, Bien’ici ou autres estimateurs privés.
+3. Si le bloc DVF est vide, écrire exactement : "Données DVF non disponibles pour cette adresse."
+4. Pour une adresse seule, ne pas inventer de DPE.
+5. Pour une adresse seule, écrire : "DPE non disponible sans annonce ou diagnostic."
+6. Pour la qualité de vie et l’accessibilité, rester factuel et prudent si aucune donnée structurée n’est fournie.
 
 Règles impératives :
-- Utilise les données DVF fournies si elles existent.
-- Ne mets jamais d'URL dans les champs texte.
+- Dans priceText, écrire uniquement : nombre de transactions DVF, prix moyen €/m², fourchette €/m², rayon utilisé.
+- Ne mets jamais d’URL dans les champs texte.
 - Tous les scores doivent être sur 100.
-- Si l’utilisateur donne seulement une adresse, tu n’as pas le droit de juger le prix du bien.
-- Pour une adresse seule, affiche des données de marché réelles si disponibles.
+- Si l’utilisateur donne seulement une adresse, ne juge pas le prix du bien.
 - Pas de phrases vagues du type "quartier attractif".
-- Sois concret.
 - Réponds uniquement en JSON valide.
 
 Structure JSON exacte :
@@ -125,7 +121,6 @@ Structure JSON exacte :
       },
       body: JSON.stringify({
         model: "gpt-4.1-mini",
-        tools: [{ type: "web_search" }],
         input: prompt
       })
     });
