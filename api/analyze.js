@@ -73,7 +73,7 @@ Données autorisées :
 6. Pour la qualité de vie et l’accessibilité, rester factuel et prudent si aucune donnée structurée n’est fournie.
 
 Règles impératives :
-- Dans priceText, écrire uniquement : nombre de transactions DVF, prix moyen €/m², fourchette €/m², rayon utilisé.
+- Dans priceText, n’écris pas la source. Présente le prix de façon lisible : "Prix moyen observé : X €/m². Fourchette locale : X–X €/m². X ventes comparables dans un rayon de X m."
 - Ne mets jamais d’URL dans les champs texte.
 - Tous les scores doivent être sur 100.
 - Si l’utilisateur donne seulement une adresse, ne juge pas le prix du bien.
