@@ -11,119 +11,125 @@ export default async function handler(req, res) {
     }
 
     if (!process.env.OPENAI_API_KEY) {
-      return res.status(500).json({ error: "OPENAI_API_KEY manquante dans Vercel" });
+      return res.status(500).json({ error: "OPENAI_API_KEY manquante" });
     }
 
-    // =========================================
-    // DVF
-    // =========================================
+    // -----------------------------
+    // DVF BLOCK
+    // -----------------------------
 
-    let dvfText = "";
+    let dvfBlock = "";
 
     try {
-      const dvfResponse = await fetch(
-        `${req.headers.origin}/api/dvf?address=${encodeURIComponent(query)}`
+      const origin =
+        req.headers.origin ||
+        "https://placecheck.vercel.app";
+
+      const dvfRes = await fetch(
+        `${origin}/api/dvf?address=${encodeURIComponent(query)}`
       );
 
-      const dvfData = await dvfResponse.json();
+      if (dvfRes.ok) {
+        const dvf = await dvfRes.json();
 
-      if (dvfData?.transactions?.length) {
-        const prices = dvfData.transactions
-          .map(t => Number(t.prix_m2))
-          .filter(Boolean);
+        if (dvf.transactionsCount > 0) {
+          dvfBlock = `
+DVF réel autour de l'adresse :
 
-        if (prices.length) {
-          const avg = Math.round(
-            prices.reduce((a, b) => a + b, 0) / prices.length
-          );
-
-          const min = Math.min(...prices);
-          const max = Math.max(...prices);
-
-          dvfText = `
-DVF réel :
-- ${prices.length} transactions trouvées
-- Prix moyen : ${avg} €/m²
-- Fourchette : ${min} à ${max} €/m²
+- ${dvf.transactionsCount} transactions comparables
+- prix moyen : ${dvf.averagePriceM2} €/m²
+- médiane : ${dvf.medianPriceM2} €/m²
+- fourchette : ${dvf.minPriceM2} à ${dvf.maxPriceM2} €/m²
+- rayon analysé : ${dvf.radius} m
 `;
         }
       }
     } catch (e) {
-      console.log("DVF error", e);
+      console.log("DVF fetch failed");
     }
 
-    // =========================================
+    // -----------------------------
     // PROMPT
-    // =========================================
+    // -----------------------------
 
     const prompt = `
+${dvfBlock}
+
 Tu es PlaceCheck, un outil français de lecture immobilière.
 
-Analyse : "${query}"
-Mode : "${mode || "auto"}"
+Analyse :
+"${query}"
 
-${dvfText}
+Mode :
+"${mode || "auto"}"
 
 Données autorisées :
 1. Pour le prix, utiliser uniquement le bloc DVF réel fourni ci-dessus.
-2. Ne jamais utiliser MeilleursAgents, SeLoger, Efficity, Bien’ici ou autres estimateurs privés.
-3. Si le bloc DVF est vide, écrire exactement : "Données DVF non disponibles pour cette adresse."
+2. Ne jamais utiliser MeilleursAgents, SeLoger, Bien'ici, Efficity ou autres estimateurs privés.
+3. Si le bloc DVF est vide, écrire exactement :
+"Données DVF non disponibles pour cette adresse."
 4. Pour une adresse seule, ne pas inventer de DPE.
-5. Pour une adresse seule, écrire : "DPE non disponible sans annonce ou diagnostic."
-6. Pour la qualité de vie et l’accessibilité, rester factuel et prudent si aucune donnée structurée n’est fournie.
+5. Pour une adresse seule, écrire :
+"DPE non disponible sans annonce ou diagnostic."
+6. Pour la qualité de vie et l’accessibilité, rester factuel et concret.
 
 Règles impératives :
-- Dans priceText, n’écris pas la source. Présente le prix de façon lisible : "Prix moyen observé : X €/m². Fourchette locale : X–X €/m². X ventes comparables dans un rayon de X m."
-- Ne mets jamais d’URL dans les champs texte.
+- Ne jamais citer DVF dans le texte final.
+- Dans priceText, écrire :
+prix moyen observé, fourchette locale, nombre de ventes comparables et rayon analysé.
+- Ne mets jamais d'URL dans les champs texte.
 - Tous les scores doivent être sur 100.
-- Si l’utilisateur donne seulement une adresse, ne juge pas le prix du bien.
 - Pas de phrases vagues du type "quartier attractif".
 - Réponds uniquement en JSON valide.
 
 Structure JSON exacte :
+
 {
   "inputType": "Adresse",
   "confidence": "Analyse sourcée",
-  "score": nombre,
-  "verdict": "3 mots max",
-  "subtitle": "phrase courte",
-  "summary": "phrase courte",
+  "score": 75,
+  "verdict": "Bonne adresse",
+  "subtitle": "Phrase courte",
+  "summary": "Phrase courte",
   "categories": {
-    "life": nombre,
-    "lifeText": "texte",
-    "price": nombre,
-    "priceText": "texte",
-    "safety": nombre,
-    "safetyText": "texte",
-    "access": nombre,
-    "accessText": "texte",
-    "energy": nombre,
-    "energyText": "texte"
+    "price": 75,
+    "priceText": "Texte",
+    "life": 80,
+    "lifeText": "Texte",
+    "access": 70,
+    "accessText": "Texte",
+    "safety": 65,
+    "safetyText": "Texte",
+    "energy": 50,
+    "energyText": "Texte"
   },
   "signals": {
-    "positive": [],
-    "negative": []
+    "positive": ["Point", "Point"],
+    "negative": ["Point", "Point"]
   },
-  "questions": [],
+  "questions": ["Question", "Question"],
   "sources": []
 }
 `;
 
-    // =========================================
+    // -----------------------------
     // OPENAI
-    // =========================================
+    // -----------------------------
 
-    const response = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: "gpt-4.1-mini",
-        input: prompt
-      })
-    });
+    const response = await fetch(
+      "https://api.openai.com/v1/responses",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4.1-mini",
+          input: prompt
+        })
+      }
+    );
 
     const data = await response.json();
 
@@ -135,11 +141,7 @@ Structure JSON exacte :
 
     const text =
       data.output_text ||
-      data.output?.flatMap(item => item.content || [])
-        ?.find(content =>
-          content.type === "output_text" ||
-          content.type === "text"
-        )?.text ||
+      data.output?.[0]?.content?.[0]?.text ||
       "";
 
     let parsed;
@@ -153,7 +155,7 @@ Structure JSON exacte :
 
     if (!parsed) {
       return res.status(500).json({
-        error: "Analyse invalide"
+        error: "JSON invalide"
       });
     }
 
