@@ -364,15 +364,7 @@
       return icons[type] || icons.life;
     }
 
-    function renderCategory(type, title, score, text) {
-      return `<article class="category-card">
-        <div class="category-top">
-          <div class="category-title"><div class="signal-picto" aria-hidden="true">${getCategoryIcon(type)}</div><div>${escapeHtml(title)}</div></div>
-          <div class="category-score">${escapeHtml(score)}</div>
-        </div>
-        <div class="category-text">${escapeHtml(limitText(text, 135))}</div>
-      </article>`;
-    }
+    function renderCategory(type, title, score, text) { return `<article class="category-card"><div class="category-top"><div class="category-title"><div class="signal-picto" aria-hidden="true">${getCategoryIcon(type)}</div><div>${escapeHtml(title)}</div></div><div class="category-score">${escapeHtml(score)}</div></div><div class="category-text">${escapeHtml(cleanText(text).trim())}</div></article>`; }
 
     async function analyzePlace(value) {
       const response = await fetch("/api/analyze", {
@@ -430,11 +422,11 @@
             <section>
               <h2>Catégories</h2>
               <div class="category-grid">
-                ${renderCategory("life", "Qualité de vie", clampScore(categories.life ?? 50) + "/100", categories.lifeText || "")}
-                ${renderCategory("price", "Prix & valeur", clampScore(categories.price ?? 50) + "/100", categories.priceText || "")}
-                ${renderCategory("safety", "Sécurité & nuisances", clampScore(categories.safety ?? 50) + "/100", categories.safetyText || "")}
-                ${renderCategory("access", "Accessibilité", clampScore(categories.access ?? 50) + "/100", categories.accessText || "")}
-                ${renderCategory("energy", "Énergie / logement", clampScore(categories.energy ?? 50) + "/100", categories.energyText || "")}
+${renderCategory("price", "Prix & valeur", clampScore(categories.price ?? 50) + "/100", categories.priceText || "")}
+${renderCategory("life", "Qualité de vie", clampScore(categories.life ?? 50) + "/100", categories.lifeText || "")}
+${renderCategory("access", "Accessibilité", clampScore(categories.access ?? 50) + "/100", categories.accessText || "")}
+${renderCategory("safety", "Sécurité & nuisances", clampScore(categories.safety ?? 50) + "/100", categories.safetyText || "")}
+${renderCategory("energy", "Énergie / logement", clampScore(categories.energy ?? 50) + "/100", categories.energyText || "")}
               </div>
             </section>
 
