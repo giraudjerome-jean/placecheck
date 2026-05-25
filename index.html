@@ -263,7 +263,18 @@
 
     let mode = "auto";
     let loadingInterval = null;
-    const loadingMessages = ["Analyse", "Lecture des signaux", "Calcul du score"];
+    const loadingMessages = [
+  "Ouverture des registres notariaux",
+  "Recherche des ventes comparables",
+  "Analyse des transactions autour de l’adresse",
+  "Lecture des signaux du quartier",
+  "Vérification des transports et commerces",
+  "Croisement des données immobilières",
+  "Inspection des risques et nuisances",
+  "Calcul du PlaceCheck Index",
+  "Compilation des signaux faibles",
+  "Finalisation de l’analyse"
+];
 
     choices.forEach(choice => {
       choice.addEventListener("click", () => {
@@ -282,7 +293,7 @@
       loadingInterval = setInterval(() => {
         i = (i + 1) % loadingMessages.length;
         loaderText.textContent = loadingMessages[i];
-      }, 1400);
+      }, 1700);
     }
 
     function stopLoadingMessages() {
