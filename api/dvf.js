@@ -13,10 +13,7 @@ export default async function handler(req, res) {
 
     const geoUrl =
       "https://api-adresse.data.gouv.fr/search/?" +
-      new URLSearchParams({
-        q: address,
-        limit: "1"
-      });
+      new URLSearchParams({ q: address, limit: "1" });
 
     const geoRes = await fetch(geoUrl);
     const geoData = await geoRes.json();
@@ -28,22 +25,22 @@ export default async function handler(req, res) {
 
     const [lon, lat] = feature.geometry.coordinates;
 
-    const rpcUrl = `${process.env.SUPABASE_URL}/rest/v1/rpc/search_dvf_gironde`;
-
-    const rpcRes = await fetch(rpcUrl, {
-      method: "POST",
-      headers: {
-        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        lon,
-        lat,
-        radius_m: radius,
-        property_type: "Appartement"
-      })
-    });
+    const rpcRes = await fetch(
+      `${process.env.SUPABASE_URL}/rest/v1/rpc/search_dvf_gironde`,
+      {
+        method: "POST",
+        headers: {
+          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          lon,
+          lat,
+          radius_m: radius
+        })
+      }
+    );
 
     const text = await rpcRes.text();
 
@@ -70,6 +67,15 @@ export default async function handler(req, res) {
       ? Math.round(prices[Math.floor(prices.length / 2)])
       : null;
 
+    const percentile = (arr, p) => {
+      if (!arr.length) return null;
+      const index = Math.floor((arr.length - 1) * p);
+      return Math.round(arr[index]);
+    };
+
+    const lowRange = percentile(prices, 0.25);
+    const highRange = percentile(prices, 0.75);
+
     return res.status(200).json({
       address,
       geocoded: {
@@ -84,6 +90,8 @@ export default async function handler(req, res) {
       transactionsCount: transactions.length,
       averagePriceM2: average,
       medianPriceM2: median,
+      lowRangePriceM2: lowRange,
+      highRangePriceM2: highRange,
       minPriceM2: prices.length ? Math.round(prices[0]) : null,
       maxPriceM2: prices.length ? Math.round(prices[prices.length - 1]) : null,
       transactions
