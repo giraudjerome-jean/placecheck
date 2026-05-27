@@ -101,7 +101,9 @@ export default async function handler(req, res) {
       if (!grouped[row.stop_id]) continue;
 
       const label =
-        `${row.transport_type} ${row.route_short_name}`;
+        row.route_short_name
+          ? `${row.transport_type} ${row.route_short_name}`
+          : row.transport_type;
 
       if (!grouped[row.stop_id].transports.includes(label)) {
         grouped[row.stop_id].transports.push(label);
