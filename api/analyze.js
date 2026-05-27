@@ -14,7 +14,10 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "OPENAI_API_KEY manquante" });
     }
 
-    const origin = req.headers.origin || `https://${req.headers.host}`;
+    const origin =
+      process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : `https://${req.headers.host}`;
 
     let dvfBlock = "";
     let accessBlock = "";
