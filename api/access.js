@@ -1,61 +1,76 @@
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
-
 export default async function handler(req, res) {
   try {
     const address = String(req.query.address || "").trim();
 
     if (!address) {
-      return res.status(400).json({
-        error: "Adresse manquante"
-      });
+      return res.status(400).json({ error: "Adresse manquante" });
     }
 
-    // Géocodage
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return res.status(500).json({ error: "Variables Supabase manquantes" });
+    }
+
     const geoRes = await fetch(
       "https://api-adresse.data.gouv.fr/search/?" +
-      new URLSearchParams({
-        q: address,
-        limit: "1"
-      })
+        new URLSearchParams({ q: address, limit: "1" })
     );
 
     const geoData = await geoRes.json();
     const feature = geoData.features?.[0];
 
     if (!feature) {
-      return res.status(404).json({
-        error: "Adresse introuvable"
-      });
+      return res.status(404).json({ error: "Adresse introuvable" });
     }
 
     const [lon, lat] = feature.geometry.coordinates;
 
-    // Recherche arrêts TBM
-    const { data, error } = await supabase.rpc(
-      "search_tbm_stops",
+    const rpcRes = await fetch(
+      `${process.env.SUPABASE_URL}/rest/v1/rpc/search_tbm_stops`,
       {
-        lon,
-        lat,
-        radius_m: 800
+        method: "POST",
+        headers: {
+          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          lon,
+          lat,
+          radius_m: 800
+        })
       }
     );
 
-    if (error) {
+    const raw = await rpcRes.text();
+
+    if (!rpcRes.ok) {
       return res.status(500).json({
-        error: error.message
+        error: "Erreur Supabase TBM",
+        status: rpcRes.status,
+        details: raw
       });
     }
 
-    const stops = (data || []).map(stop => ({
-      name: stop.stop_name,
-      distance: Math.round(stop.distance_m),
-      type: "Transport"
-    }));
+    const data = JSON.parse(raw);
+
+    const seen = new Set();
+
+    const stops = (data || [])
+      .map(stop => {
+        const name = stop.stop_name || "";
+        const key = name.toLowerCase();
+
+        if (!name || seen.has(key)) return null;
+        seen.add(key);
+
+        return {
+          name,
+          distance: Math.round(Number(stop.distance_m || 0)),
+          type: "Transport"
+        };
+      })
+      .filter(Boolean)
+      .slice(0, 6);
 
     return res.status(200).json({
       address,
@@ -67,7 +82,6 @@ export default async function handler(req, res) {
       },
       stops
     });
-
   } catch (error) {
     return res.status(500).json({
       error: error.message || "Erreur serveur"
