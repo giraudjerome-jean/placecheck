@@ -89,35 +89,48 @@ export default async function handler(req, res) {
 
     const grouped = {};
 
-    for (const stop of nearbyStops) {
-      grouped[stop.stop_id] = {
-        stop_name: stop.stop_name,
-        distance: Math.round(stop.distance_m),
-        transports: []
-      };
+for (const stop of nearbyStops) {
+  const cleanName = String(stop.stop_name || "")
+    .replace(/\s*-\s*/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const key = `${cleanName}-${Math.round(stop.distance_m)}`;
+
+  if (!grouped[key]) {
+    grouped[key] = {
+      name: cleanName,
+      distance: Math.round(stop.distance_m),
+      lines: []
+    };
+  }
+}
+
+for (const row of accessData) {
+  const cleanName = String(row.stop_name || "")
+    .replace(/\s*-\s*/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const match = Object.values(grouped).find(
+    stop => stop.name === cleanName
+  );
+
+  if (!match) continue;
+
+  if (row.route_short_name) {
+    const label = `${row.transport_type} ${row.route_short_name}`;
+
+    if (!match.lines.includes(label)) {
+      match.lines.push(label);
     }
+  }
+}
 
-    for (const row of accessData) {
-      if (!grouped[row.stop_id]) continue;
-
-      const label =
-        row.route_short_name
-          ? `${row.transport_type} ${row.route_short_name}`
-          : row.transport_type;
-
-      if (!grouped[row.stop_id].transports.includes(label)) {
-        grouped[row.stop_id].transports.push(label);
-      }
-    }
-
-    const stops = Object.values(grouped)
-      .map(stop => ({
-        name: stop.stop_name,
-        distance: stop.distance,
-        lines: stop.transports.slice(0, 4)
-      }))
-      .sort((a, b) => a.distance - b.distance)
-      .slice(0, 6);
+const stops = Object.values(grouped)
+  .filter(stop => stop.lines.length > 0)
+  .sort((a, b) => a.distance - b.distance)
+  .slice(0, 6);
 
     return res.status(200).json({
       address,
