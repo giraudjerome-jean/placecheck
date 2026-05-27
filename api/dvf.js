@@ -1,7 +1,7 @@
 export default async function handler(req, res) {
   try {
     const address = String(req.query.address || "").trim();
-    const radius = Number(req.query.radius || 300);
+    const radius = Number(req.query.radius || 220);
 
     if (!address) {
       return res.status(400).json({ error: "Adresse manquante" });
@@ -40,7 +40,8 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         lon,
         lat,
-        radius_m: radius
+        radius_m: radius,
+        property_type: "Appartement"
       })
     });
 
