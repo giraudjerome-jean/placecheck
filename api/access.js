@@ -8,6 +8,7 @@ export default async function handler(req, res) {
       });
     }
 
+    // Géocodage adresse
     const geoRes = await fetch(
       "https://api-adresse.data.gouv.fr/search/?" +
       new URLSearchParams({
@@ -27,13 +28,13 @@ export default async function handler(req, res) {
 
     const [lon, lat] = feature.geometry.coordinates;
 
-    const overpassQuery = `
+    // Overpass OpenStreetMap
+    const query = `
 [out:json];
 (
-  node(around:600,${lat},${lon})["public_transport"];
-  node(around:600,${lat},${lon})["highway"="bus_stop"];
-  node(around:600,${lat},${lon})["railway"="tram_stop"];
-  node(around:600,${lat},${lon})["station"="subway"];
+  node(around:800,${lat},${lon})["highway"="bus_stop"];
+  node(around:800,${lat},${lon})["railway"="tram_stop"];
+  node(around:800,${lat},${lon})["station"="subway"];
 );
 out body;
 `;
@@ -42,24 +43,41 @@ out body;
       "https://overpass-api.de/api/interpreter",
       {
         method: "POST",
-        body: overpassQuery
+        body: query
       }
     );
 
     const data = await overpassRes.json();
 
+    function distanceMeters(lat1, lon1, lat2, lon2) {
+      const R = 6371000;
+
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) *
+        Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+      return Math.round(R * c);
+    }
+
     const stops = (data.elements || [])
       .map(el => {
-        const d =
-          Math.sqrt(
-            Math.pow((el.lat - lat) * 111000, 2) +
-            Math.pow((el.lon - lon) * 85000, 2)
-          );
+        const dist = distanceMeters(
+          lat,
+          lon,
+          el.lat,
+          el.lon
+        );
 
         return {
-          name:
-            el.tags?.name ||
-            "Arrêt sans nom",
+          name: el.tags?.name || "Arrêt sans nom",
 
           type:
             el.tags?.railway === "tram_stop"
@@ -68,11 +86,12 @@ out body;
               ? "Métro"
               : "Bus",
 
-          distance: Math.round(d)
+          distance: dist
         };
       })
+      .filter(s => s.distance <= 800)
       .sort((a, b) => a.distance - b.distance)
-      .slice(0, 8);
+      .slice(0, 6);
 
     return res.status(200).json({
       address,
