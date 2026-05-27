@@ -14,11 +14,11 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "OPENAI_API_KEY manquante" });
     }
 
-    const origin =
-      process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : `https://${req.headers.host}`;
+    const protocol = req.headers["x-forwarded-proto"] || "https";
+    const host = req.headers.host;
+    const origin = `${protocol}://${host}`;
 
+    let dvf = null;
     let dvfBlock = "";
     let accessBlock = "";
 
@@ -28,9 +28,9 @@ export default async function handler(req, res) {
       );
 
       if (dvfRes.ok) {
-        const dvf = await dvfRes.json();
+        dvf = await dvfRes.json();
 
-        if (dvf.transactionsCount > 0) {
+        if (Number(dvf.transactionsCount) > 0) {
           dvfBlock = `
 Prix observés autour de l'adresse :
 - ${dvf.transactionsCount} ventes comparables
@@ -84,8 +84,6 @@ Règles impératives :
 - Pour le prix, utilise uniquement le bloc "Prix observés".
 - Ne jamais utiliser MeilleursAgents, SeLoger, Bien'ici, Efficity ou autres estimateurs privés.
 - Ne cite pas la source dans le texte final.
-- Dans priceText, écris une phrase claire et ludique : prix moyen observé, prix médian, majorité des ventes comparables, nombre de ventes et rayon.
-- Ne parle pas de fourchette min/max brute.
 - Pour l’accessibilité, utilise uniquement les stations fournies dans le bloc accessibilité.
 - Toujours citer les arrêts les plus proches d’abord.
 - Pour la qualité de vie, cite des éléments concrets du quartier : commerces, cafés, marchés, parc, écoles, rues commerçantes.
@@ -162,6 +160,18 @@ Structure JSON exacte :
 
     if (!parsed) {
       return res.status(500).json({ error: "JSON invalide" });
+    }
+
+    parsed.categories = parsed.categories || {};
+
+    if (dvf && Number(dvf.transactionsCount) > 0) {
+      parsed.categories.price = 75;
+      parsed.categories.priceText =
+        `Prix moyen observé : ${dvf.averagePriceM2} €/m². Prix médian : ${dvf.medianPriceM2} €/m². La majorité des ventes comparables se situe entre ${dvf.lowRangePriceM2} et ${dvf.highRangePriceM2} €/m², sur ${dvf.transactionsCount} ventes analysées dans un rayon de ${dvf.radius} m.`;
+    } else {
+      parsed.categories.price = 0;
+      parsed.categories.priceText =
+        "Données de prix non disponibles pour cette adresse.";
     }
 
     return res.status(200).json(parsed);
