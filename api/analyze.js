@@ -172,7 +172,33 @@ Structure JSON exacte :
       parsed.categories.priceText =
         "Données de prix non disponibles pour cette adresse.";
     }
+if (accessBlock && parsed.categories) {
+  try {
+    const accessRes = await fetch(
+      `${origin}/api/access?address=${encodeURIComponent(query)}`
+    );
 
+    const access = await accessRes.json();
+
+    if (access.stops?.length) {
+      const topStops = access.stops
+        .slice(0, 3)
+        .map(stop => {
+          const lines = stop.lines?.join(", ");
+
+          return `${stop.name} (~${stop.distance} m${lines ? `, ${lines}` : ""})`;
+        })
+        .join(", ");
+
+      parsed.categories.access = 82;
+
+      parsed.categories.accessText =
+        `Plusieurs transports accessibles à pied : ${topStops}.`;
+    }
+  } catch (e) {
+    console.log(e);
+  }
+}
     return res.status(200).json(parsed);
   } catch (error) {
     return res.status(500).json({
