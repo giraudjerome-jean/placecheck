@@ -166,7 +166,7 @@ Structure JSON exacte :
     if (dvf && Number(dvf.transactionsCount) > 0) {
       parsed.categories.price = 75;
       parsed.categories.priceText =
-        `Les ventes récentes autour de l’adresse tournent autour de ${dvf.averagePriceM2} €/m². La plupart des appartements comparables se situent entre ${dvf.lowRangePriceM2} et ${dvf.highRangePriceM2} €/m² dans le secteur immédiat.`;
+  `Les ventes récentes autour de l’adresse tournent autour de ${dvf.averagePriceM2} €/m². La plupart des appartements comparables se situent entre ${dvf.lowRangePriceM2} et ${dvf.highRangePriceM2} €/m². Calcul basé sur ${dvf.transactionsCount} transactions dans un périmètre de ${dvf.radius} m.`;
     } else {
       parsed.categories.price = 0;
       parsed.categories.priceText =
