@@ -3,27 +3,38 @@ export default async function handler(req, res) {
     const address = String(req.query.address || "").trim();
 
     if (!address) {
-      return res.status(400).json({ error: "Adresse manquante" });
+      return res.status(400).json({
+        error: "Adresse manquante"
+      });
     }
 
     if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      return res.status(500).json({ error: "Variables Supabase manquantes" });
+      return res.status(500).json({
+        error: "Variables Supabase manquantes"
+      });
     }
 
+    // Géocodage adresse
     const geoRes = await fetch(
       "https://api-adresse.data.gouv.fr/search/?" +
-        new URLSearchParams({ q: address, limit: "1" })
+        new URLSearchParams({
+          q: address,
+          limit: "1"
+        })
     );
 
     const geoData = await geoRes.json();
     const feature = geoData.features?.[0];
 
     if (!feature) {
-      return res.status(404).json({ error: "Adresse introuvable" });
+      return res.status(404).json({
+        error: "Adresse introuvable"
+      });
     }
 
     const [lon, lat] = feature.geometry.coordinates;
 
+    // Recherche arrêts proches
     const rpcRes = await fetch(
       `${process.env.SUPABASE_URL}/rest/v1/rpc/search_tbm_stops`,
       {
@@ -45,31 +56,65 @@ export default async function handler(req, res) {
 
     if (!rpcRes.ok) {
       return res.status(500).json({
-        error: "Erreur Supabase TBM",
-        status: rpcRes.status,
+        error: "Erreur recherche arrêts",
         details: raw
       });
     }
 
-    const data = JSON.parse(raw);
+    const nearbyStops = JSON.parse(raw);
 
-    const seen = new Set();
+    const stopIds = nearbyStops.map(s => s.stop_id);
 
-    const stops = (data || [])
-      .map(stop => {
-        const name = stop.stop_name || "";
-        const key = name.toLowerCase();
+    // Récupération lignes + types
+    const accessRes = await fetch(
+      `${process.env.SUPABASE_URL}/rest/v1/tbm_access?stop_id=in.(${stopIds.join(",")})`,
+      {
+        headers: {
+          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`
+        }
+      }
+    );
 
-        if (!name || seen.has(key)) return null;
-        seen.add(key);
+    const accessRaw = await accessRes.text();
 
-        return {
-          name,
-          distance: Math.round(Number(stop.distance_m || 0)),
-          type: "Transport"
-        };
-      })
-      .filter(Boolean)
+    if (!accessRes.ok) {
+      return res.status(500).json({
+        error: "Erreur tbm_access",
+        details: accessRaw
+      });
+    }
+
+    const accessData = JSON.parse(accessRaw);
+
+    const grouped = {};
+
+    for (const stop of nearbyStops) {
+      grouped[stop.stop_id] = {
+        stop_name: stop.stop_name,
+        distance: Math.round(stop.distance_m),
+        transports: []
+      };
+    }
+
+    for (const row of accessData) {
+      if (!grouped[row.stop_id]) continue;
+
+      const label =
+        `${row.transport_type} ${row.route_short_name}`;
+
+      if (!grouped[row.stop_id].transports.includes(label)) {
+        grouped[row.stop_id].transports.push(label);
+      }
+    }
+
+    const stops = Object.values(grouped)
+      .map(stop => ({
+        name: stop.stop_name,
+        distance: stop.distance,
+        lines: stop.transports.slice(0, 4)
+      }))
+      .sort((a, b) => a.distance - b.distance)
       .slice(0, 6);
 
     return res.status(200).json({
@@ -82,6 +127,7 @@ export default async function handler(req, res) {
       },
       stops
     });
+
   } catch (error) {
     return res.status(500).json({
       error: error.message || "Erreur serveur"
