@@ -21,7 +21,7 @@ export default async function handler(req, res) {
 
     try {
       const dvfRes = await fetch(
-        `${origin}/api/dvf?address=${encodeURIComponent(query)}&radius=500`
+        `${origin}/api/dvf?address=${encodeURIComponent(query)}&radius=220`
       );
 
       if (dvfRes.ok) {
@@ -33,7 +33,7 @@ Prix observés autour de l'adresse :
 - ${dvf.transactionsCount} ventes comparables
 - prix moyen observé : ${dvf.averagePriceM2} €/m²
 - prix médian observé : ${dvf.medianPriceM2} €/m²
-- fourchette locale : ${dvf.minPriceM2} à ${dvf.maxPriceM2} €/m²
+- majorité des ventes comparables : ${dvf.lowRangePriceM2} à ${dvf.highRangePriceM2} €/m²
 - rayon analysé : ${dvf.radius} m
 `;
         }
@@ -81,7 +81,8 @@ Règles impératives :
 - Pour le prix, utilise uniquement le bloc "Prix observés".
 - Ne jamais utiliser MeilleursAgents, SeLoger, Bien'ici, Efficity ou autres estimateurs privés.
 - Ne cite pas la source dans le texte final.
-- Dans priceText, écris une phrase claire : prix moyen observé, fourchette locale, nombre de ventes comparables, rayon.
+- Dans priceText, écris une phrase claire et ludique : prix moyen observé, prix médian, majorité des ventes comparables, nombre de ventes et rayon.
+- Ne parle pas de fourchette min/max brute.
 - Pour l’accessibilité, utilise uniquement les stations fournies dans le bloc accessibilité.
 - Toujours citer les arrêts les plus proches d’abord.
 - Pour la qualité de vie, cite des éléments concrets du quartier : commerces, cafés, marchés, parc, écoles, rues commerçantes.
