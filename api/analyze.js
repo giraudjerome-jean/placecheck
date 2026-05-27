@@ -35,7 +35,6 @@ export default async function handler(req, res) {
 Prix observés autour de l'adresse :
 - ${dvf.transactionsCount} ventes comparables
 - prix moyen observé : ${dvf.averagePriceM2} €/m²
-- prix médian observé : ${dvf.medianPriceM2} €/m²
 - majorité des ventes comparables : ${dvf.lowRangePriceM2} à ${dvf.highRangePriceM2} €/m²
 - rayon analysé : ${dvf.radius} m
 `;
@@ -167,7 +166,7 @@ Structure JSON exacte :
     if (dvf && Number(dvf.transactionsCount) > 0) {
       parsed.categories.price = 75;
       parsed.categories.priceText =
-        `Prix moyen observé : ${dvf.averagePriceM2} €/m². Prix médian : ${dvf.medianPriceM2} €/m². La majorité des ventes comparables se situe entre ${dvf.lowRangePriceM2} et ${dvf.highRangePriceM2} €/m², sur ${dvf.transactionsCount} ventes analysées dans un rayon de ${dvf.radius} m.`;
+        `Les ventes récentes autour de l’adresse tournent autour de ${dvf.averagePriceM2} €/m². La plupart des appartements comparables se situent entre ${dvf.lowRangePriceM2} et ${dvf.highRangePriceM2} €/m² dans le secteur immédiat.`;
     } else {
       parsed.categories.price = 0;
       parsed.categories.priceText =
