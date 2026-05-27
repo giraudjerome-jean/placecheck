@@ -3,12 +3,11 @@ function distanceMeters(lat1, lon1, lat2, lon2) {
   const toRad = v => (v * Math.PI) / 180;
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
-
   const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos(toRad(lat1)) *
-      Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) ** 2;
+    Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) ** 2;
 
   return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
@@ -16,7 +15,7 @@ function distanceMeters(lat1, lon1, lat2, lon2) {
 export default async function handler(req, res) {
   try {
     const address = String(req.query.address || "").trim();
-    const radius = Number(req.query.radius || 700);
+    const radius = Number(req.query.radius || 900);
 
     if (!address) {
       return res.status(400).json({ error: "Adresse manquante" });
@@ -24,7 +23,7 @@ export default async function handler(req, res) {
 
     const geoRes = await fetch(
       "https://api-adresse.data.gouv.fr/search/?" +
-        new URLSearchParams({ q: address, limit: "1" })
+      new URLSearchParams({ q: address, limit: "1" })
     );
 
     const geoData = await geoRes.json();
@@ -48,7 +47,9 @@ out body;
 
     const overpassRes = await fetch("https://overpass-api.de/api/interpreter", {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
       body: new URLSearchParams({ data: overpassQuery })
     });
 
@@ -66,8 +67,8 @@ out body;
         let mode = "Transport";
 
         if (tags.railway === "tram_stop") mode = "Tram";
-        else if (tags.highway === "bus_stop") mode = "Bus";
         else if (tags.tram === "yes") mode = "Tram";
+        else if (tags.highway === "bus_stop") mode = "Bus";
         else if (tags.bus === "yes") mode = "Bus";
 
         const key = `${mode}-${name}`.toLowerCase();
@@ -81,23 +82,18 @@ out body;
         };
       })
       .filter(Boolean)
-      .sort((a, b) => {
-        if (a.distance !== b.distance) return a.distance - b.distance;
-        if (a.mode === "Tram" && b.mode !== "Tram") return -1;
-        if (a.mode !== "Tram" && b.mode === "Tram") return 1;
-        return 0;
-      })
-      .slice(0, 5);
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, 6);
 
     return res.status(200).json({
       address,
+      radius,
       geocoded: {
         label: feature.properties.label,
         city: feature.properties.city,
         lon,
         lat
       },
-      radius,
       count: stops.length,
       stops
     });
